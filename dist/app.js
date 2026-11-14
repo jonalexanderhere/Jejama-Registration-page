@@ -66,3 +66,28 @@ if (globalThis.uploadJejamaProof) {
     })
     .catch(() => {});
 }
+
+const sailingRoute = document.querySelector('#sailing-route');
+const timelineShip = sailingRoute?.nextElementSibling;
+const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)');
+if (timelineShip) {
+  let visible = false;
+  let frame;
+  const length = sailingRoute.getTotalLength();
+  const sail = time => {
+    const progress = (1 - Math.cos(time * Math.PI / 10000)) / 2;
+    const point = sailingRoute.getPointAtLength(length * (.035 + .93 * progress));
+    timelineShip.setAttribute('transform', 'translate(' + point.x + ' ' + point.y + ')');
+    frame = requestAnimationFrame(sail);
+  };
+  const update = () => {
+    cancelAnimationFrame(frame);
+    if (visible && !reducedMotion.matches) frame = requestAnimationFrame(sail);
+    else timelineShip.setAttribute('transform', 'translate(125 47)');
+  };
+  new IntersectionObserver(([entry]) => {
+    visible = entry.isIntersecting;
+    update();
+  }).observe(sailingRoute.ownerSVGElement);
+  reducedMotion.addEventListener('change', update);
+}
