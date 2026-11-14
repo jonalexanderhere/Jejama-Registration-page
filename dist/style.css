@@ -133,3 +133,6 @@ footer .shell{display:flex;justify-content:space-between;align-items:center;gap:
 .organization-logo{display:grid;place-items:center;min-height:8rem;margin-top:.4rem;padding:1rem;border-radius:.65rem;background:#edf6fc}
 .organization-logo img{max-height:6rem;width:auto;max-width:100%;object-fit:contain}
 .partnership-options{padding-top:0}
+.media-logos{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:.75rem;margin-top:1rem}
+.media-logos .organization-logo{margin:0;background:#fff}
+.media-logos img{height:auto}
