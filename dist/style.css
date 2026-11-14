@@ -67,14 +67,14 @@ footer .shell{display:flex;justify-content:space-between;align-items:center;gap:
 .hero{position:relative;isolation:isolate;background:var(--navy)}
 .hero::before{content:"";position:absolute;inset:0;pointer-events:none;background:linear-gradient(180deg,var(--navy),#0b2b53cf 8%,#0b2b538c 22%,#0b2b532e 39%,transparent 58%)}
 .hero-scene{width:100%;height:auto}
-.hero-inner{position:absolute;inset:0 0 auto;display:flex;justify-content:flex-end;padding-top:clamp(.9rem,2.7vw,3rem)}
-.hero-copy{width:clamp(310px,33vw,470px)}
+.hero-inner{position:absolute;inset:0 0 auto;display:grid;justify-items:center;padding-top:clamp(2.75rem,5.5vw,6rem)}
+.hero-copy{width:min(100%,34rem);text-align:center}
 .crest{display:none}
 .hero h1{font-size:clamp(2.65rem,4.3vw,5rem);line-height:.91;letter-spacing:-.04em}
 .hero h1 br{display:none}
 .hero h2{font-size:clamp(1.15rem,1.6vw,1.6rem);margin-top:.75rem}
-.hero p{font-size:clamp(.875rem,1.1vw,1rem);max-width:40ch}
-.hero .actions{margin-top:.85rem}
+.hero p{font-size:clamp(.875rem,1.1vw,1rem);max-width:40ch;margin-inline:auto}
+.hero .actions{justify-content:center;margin-top:1.15rem}
 .hero .button{padding:.5rem .9rem}
 .ribbon{z-index:1;margin-bottom:0}
 .wave-band{height:clamp(42px,7.5vw,111px);background:url('assets/cartoon-waves.svg') center bottom/100% 100% no-repeat}
@@ -86,18 +86,14 @@ footer .shell{display:flex;justify-content:space-between;align-items:center;gap:
 .closing{width:100%;margin-top:clamp(2.5rem,6vw,5rem);padding:3.25rem 1rem clamp(5rem,9vw,8rem);background:url('assets/cartoon-waves.svg') center calc(100% + 9px)/100% clamp(50px,7vw,82px) no-repeat,radial-gradient(ellipse at 50% 28%,var(--sea),var(--navy) 72%)}
 @media(max-width:1000px){
  .hero-inner{position:static;display:block;padding:1.35rem 0 3.6rem}
- .hero-copy{width:auto;background:none;padding:0}
- .hero h1{font-size:clamp(2.65rem,8vw,4.5rem)}
+ .hero-copy{margin-inline:auto}
+ .hero h1{font-size:clamp(2.45rem,8vw,4.5rem)}
  .hero h2{font-size:clamp(1.15rem,3.1vw,1.6rem)}
 }
 @media(max-width:560px){
  .timeline,.prize-layout{grid-template-columns:1fr}
  .prize-layout img{max-height:185px;width:auto}
  .guide{grid-template-columns:minmax(80px,1fr) minmax(0,2fr)}
-}
-@media(min-width:1001px){
- .hero-inner{width:100%;padding-right:28%;padding-top:clamp(.75rem,2vw,2rem)}
- .hero-copy{width:clamp(340px,30vw,470px)}
 }
 .availability{color:var(--gold);font-weight:700}
 .guide .availability{color:#155579}
@@ -106,7 +102,7 @@ footer .shell{display:flex;justify-content:space-between;align-items:center;gap:
  .hero-scene{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:27% center;z-index:-2}
  .hero::before{content:"";position:absolute;inset:0;z-index:-1;background:linear-gradient(0deg,var(--navy) 0%,#0b2b53fa 16%,#0b2b53e6 36%,#0b2b5338 68%,transparent 86%),linear-gradient(180deg,var(--navy),transparent 19%)}
  .hero-inner{padding:6.5rem 0 3.15rem}
- .hero h1{font-size:clamp(2.65rem,8vw,4.5rem)}
+ .hero h1{font-size:clamp(2.45rem,8vw,4.5rem)}
  .hero h2{line-height:1.12}
  .hero .actions{gap:.5rem}
 }
