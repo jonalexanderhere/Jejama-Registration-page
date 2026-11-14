@@ -34,6 +34,10 @@ form.addEventListener('submit', async (event) => {
   submit.disabled = true;
   feedback.textContent = 'Submitting registration…';
   try {
+    if (globalThis.uploadJejamaProof) {
+      await globalThis.uploadJejamaProof(proof, submissionId);
+      data.delete('proof');
+    }
     const response = await fetch(form.action, {method: 'POST', body: data});
     const result = await response.json();
     if (response.ok) {

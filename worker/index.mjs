@@ -16,7 +16,7 @@ function proofType(bytes) {
   return null;
 }
 
-async function register(request, env) {
+export async function register(request, env) {
   const contentType = request.headers.get('content-type') || '';
   if (!contentType.startsWith('multipart/form-data;')) return badRequest('Submit the registration form with a payment proof.', 415);
   if (Number(request.headers.get('content-length')) > limit + 65536) return badRequest('Payment proof must be 5 MB or smaller.', 413);
@@ -57,8 +57,8 @@ async function register(request, env) {
   if (new Set(participants.map(({email}) => email)).size !== 3) {
     return badRequest('Enter a different email address for each participant.');
   }
-  const proof = data.get('proof');
-  if (data.getAll('proof').length !== 1 || !(proof instanceof File) || !proof.size || proof.size > limit) {
+  const proof = env.readProof ? await env.readProof(id) : data.get('proof');
+  if ((!env.readProof && data.getAll('proof').length !== 1) || !(proof instanceof File) || !proof.size || proof.size > limit) {
     return badRequest('Attach one JPEG, PNG, or PDF file up to 5 MB.');
   }
   const bytes = new Uint8Array(await proof.arrayBuffer());
@@ -84,14 +84,17 @@ async function register(request, env) {
   return json({id}, 201);
 }
 
-async function admin(request, env, url) {
+export async function admin(request, env, url) {
   const user = request.headers.get('oai-authenticated-user-id');
   const email = request.headers.get('oai-authenticated-user-email')?.trim().toLowerCase();
   const allowed = (env.ADMIN_EMAILS || '').toLowerCase().split(',').map(item => item.trim()).filter(Boolean);
-  if (!user && request.method === 'GET' && url.pathname === '/admin') {
+  if (env.authorizeAdmin && !env.authorizeAdmin(request)) {
+    return new Response('Organizer sign-in required.', {status: 401, headers: {...privateHeaders, 'WWW-Authenticate': 'Basic realm="Jejama Organizers", charset="UTF-8"'}});
+  }
+  if (!env.authorizeAdmin && !user && request.method === 'GET' && url.pathname === '/admin') {
     return new Response(null, {status: 302, headers: {...privateHeaders, Location: '/signin-with-chatgpt?returnTo=%2Fadmin'}});
   }
-  if (!user || !allowed.includes(email)) return badRequest('Organizer access required.', 403);
+  if (!env.authorizeAdmin && (!user || !allowed.includes(email))) return badRequest('Organizer access required.', 403);
 
   if (url.pathname === '/admin' && request.method === 'GET') {
     const {results} = await env.DB.prepare('SELECT id, team, participants, status, created_at FROM team_registrations ORDER BY created_at DESC, id DESC LIMIT 51 OFFSET ?')
