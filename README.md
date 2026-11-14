@@ -1,7 +1,9 @@
 # JEJAMA CTF
 
-Jalankan `python server.py` dari folder proyek, lalu buka http://127.0.0.1:8765. Server lokal menyimpan pendaftaran ke `registrations.sqlite3` dan menampilkan kode pendaftaran. Pengiriman ulang dengan nama tim dan email yang sama mengembalikan kode yang sama.
+Run `node worker/build.mjs` from this directory to generate the Sites Worker at `dist/server/index.js`. The Worker serves the assets in `dist` and handles registrations. Deploy it with the bindings in the hosting manifest and the SQL migration in `drizzle`.
 
-Folder `dist` berisi situs statis dan asetnya. Saat disajikan sendiri, formulir berjalan dalam mode pratinjau. Untuk registrasi online, sambungkan endpoint `/api/registrations` ke penyimpanan di hosting. GET mengembalikan `{"enabled":true}`, POST menerima JSON berisi `team`, `captain`, dan `email` lalu mengembalikan `{"id":"..."}` saat berhasil.
+- `DB` stores registrations and review status.
+- `BUCKET` stores private payment proofs.
+- `ADMIN_EMAILS` is the comma-separated list of authorized ChatGPT account emails. Set it in the Sites runtime environment.
 
-Aset hero dibuat dengan ImageGen bawaan. Briefnya adalah ilustrasi kartun sinematik kapten gajah di kemudi kapal, laut senja, awan abstrak, dan pulau dengan rumah panggung beratap siger, dengan ruang gelap di kiri untuk judul. Ikon kompas dibuat dalam SVG.
+Organizers sign in to `/admin` to download proofs and review submissions. The legacy Python server and its SQLite records are separate from the hosted registration system.

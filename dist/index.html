@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="theme-color" content="#082d46">
 <meta name="description" content="Jejama CTF is an online Capture the Flag competition for students.">
-<title>Jejama CTF | Set Sail into Cybersecurity</title>
+<title>Jejama CTF | A New Journey</title>
 <link rel="icon" href="assets/compass.svg">
 <link rel="stylesheet" href="style.css">
 <script defer src="app.js"></script>
@@ -14,7 +14,7 @@
 <header class="shell masthead">
 <a class="brand" href="#"><img src="assets/compass.svg" alt="" width="38" height="38"><span>JEJAMA<b> CTF</b></span></a>
 <nav aria-label="Main navigation"><a href="#beranda">Home</a><a href="#tentang">About</a><a href="#tantangan">Challenges</a><a href="#timeline">Timeline</a><a href="#hadiah">Prize Pool</a><a href="#sponsor">Sponsor</a><a href="#media">Media Partner</a><a href="#guidebook">Guidebook</a></nav>
-<a class="button compact" href="#daftar">Register ↗</a>
+<button type="button" class="button compact register-trigger" aria-haspopup="dialog"><span class="sailing-icon" aria-hidden="true">⛵</span> Register</button>
 </header>
 <main>
 <section class="hero" id="beranda" aria-labelledby="judul">
@@ -23,9 +23,9 @@
 <div class="hero-copy">
 <img class="crest" src="assets/compass.svg" alt="" width="58" height="58">
 <h1 id="judul">JEJAMA<br> CTF</h1>
-<h2>Set Sail into Cybersecurity</h2>
+<h2>A New Journey</h2>
 <p>An online Capture the Flag competition that puts your cybersecurity skills to the test.</p>
-<div class="actions"><a class="button" href="#daftar">Register Now ↗</a><a class="button secondary" href="#guidebook">View Guidebook ↓</a></div>
+<div class="actions"><button type="button" class="button register-trigger" aria-haspopup="dialog"><span class="sailing-icon" aria-hidden="true">⛵</span> Register Now</button><a class="button secondary" href="#guidebook">View Guidebook ↓</a></div>
 </div>
 </div>
 </section>
@@ -45,18 +45,30 @@
 <section id="media"><h2>Media Partner</h2><p>Help share Jejama CTF with your community.</p><small>Partnership details coming soon.</small></section>
 </div>
 <section class="shell guide paper" id="guidebook"><img src="assets/guidebook.webp" alt="" width="225" height="159"><div><h2>Guidebook</h2><p class="availability">Coming Soon</p></div></section>
-<div class="shell section centered closing"><h2>Ready to Set Sail?</h2><p>Put your skills to the test with your team.</p><a class="button" href="#daftar">Register Now ↗</a></div>
-<section class="shell section registration" id="daftar">
-<div><h2>Team Registration</h2><p>Enter your team name and captain’s contact details.</p></div>
-<form id="registration" action="/api/registrations" method="post">
-<label>Team name<input name="team" required maxlength="80" placeholder="e.g. Siger Crew"></label>
-<label>Captain’s name<input name="captain" required maxlength="100" autocomplete="name" placeholder="Full name"></label>
-<label>Captain’s email<input name="email" type="email" required maxlength="254" autocomplete="email" placeholder="captain@example.com"></label>
-<p class="form-note" id="mode">We use this email to contact you about registration.</p>
-<button class="button" type="submit"><span aria-hidden="true">⚓</span> Submit Registration <span aria-hidden="true">↗</span></button>
-<p class="feedback" role="status" id="feedback"></p>
-</form>
-</section>
+<div class="shell section centered closing"><h2>Ready to Set Sail?</h2><p>Put your skills to the test with your team.</p><button type="button" class="button register-trigger" aria-haspopup="dialog"><span class="sailing-icon" aria-hidden="true">⛵</span> Register Now</button></div>
 </main>
+<dialog id="registration-dialog" aria-labelledby="registration-title">
+<div class="dialog-heading"><h2 id="registration-title">Team Registration</h2><button type="button" id="close-registration" autofocus>Close</button></div>
+<form id="registration" action="/api/registrations" method="post" enctype="multipart/form-data">
+<p>Register exactly three participants, including the captain.</p>
+<label>Team name<input name="team" required maxlength="80" placeholder="e.g. Siger Crew"></label>
+<fieldset><legend>Captain</legend><div class="participant-fields">
+<label>Full name<input name="captainName" required maxlength="100"></label>
+<label>Email address<input name="captainEmail" type="email" required maxlength="254"></label>
+</div></fieldset>
+<fieldset><legend>Member 2</legend><div class="participant-fields">
+<label>Full name<input name="member2Name" required maxlength="100"></label>
+<label>Email address<input name="member2Email" type="email" required maxlength="254"></label>
+</div></fieldset>
+<fieldset><legend>Member 3</legend><div class="participant-fields">
+<label>Full name<input name="member3Name" required maxlength="100"></label>
+<label>Email address<input name="member3Email" type="email" required maxlength="254"></label>
+</div></fieldset>
+<label>Payment proof<input name="proof" type="file" accept="image/jpeg,image/png,application/pdf,.jpg,.jpeg,.png,.pdf" required aria-describedby="proof-help"></label>
+<p id="proof-help" class="form-note">Follow the organizer’s payment instructions, then attach one JPEG, PNG, or PDF file up to 5 MB.</p>
+<button class="button" type="submit">Submit Registration</button>
+</form>
+<p class="feedback" role="status" id="feedback"></p>
+</dialog>
 <footer><div class="shell"><a class="brand" href="#"><img src="assets/compass.svg" alt="" width="32" height="32"> JEJAMA CTF</a><a href="#">Back to top ↑</a></div></footer>
 </body></html>

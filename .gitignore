@@ -1,2 +1,3 @@
 registrations.sqlite3*
 __pycache__/
+/dist/server/

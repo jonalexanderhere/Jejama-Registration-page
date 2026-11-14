@@ -1,50 +1,51 @@
+const dialog = document.querySelector('#registration-dialog');
 const form = document.querySelector('#registration');
 const feedback = document.querySelector('#feedback');
-const mode = document.querySelector('#mode');
-const button = form.querySelector('button');
-let demo = true;
-button.disabled = true;
-async function detectBackend() {
-  try {
-    const response = await fetch('/api/registrations', {headers: {Accept: 'application/json'}});
-    demo = !(response.ok && response.headers.get('content-type')?.includes('application/json') && (await response.json()).enabled === true);
-  } catch {
-    demo = true;
-  } finally {
-    if (demo) {
-      mode.textContent = 'Preview mode. You can test this form without sending your details.';
-      button.childNodes[1].textContent = ' Test Registration ';
-    }
-    button.disabled = false;
-  }
+const submit = form.querySelector('button[type=submit]');
+const maxProofSize = 5 * 1024 * 1024;
+let opener;
+let retryId;
+
+for (const trigger of document.querySelectorAll('.register-trigger')) {
+  trigger.addEventListener('click', () => {
+    opener = trigger;
+    dialog.showModal();
+  });
 }
-detectBackend();
+document.querySelector('#close-registration').addEventListener('click', () => dialog.close());
+dialog.addEventListener('close', () => opener?.focus());
+form.addEventListener('input', () => { retryId = undefined; });
 
 form.addEventListener('submit', async (event) => {
   event.preventDefault();
-  const data = Object.fromEntries([...new FormData(form)].map(([key, value]) => [key, value.trim()]));
-  if (Object.values(data).some(value => !value)) {
-    feedback.textContent = 'Fill in all fields before continuing.';
+  const data = new FormData(form);
+  const emails = ['captainEmail', 'member2Email', 'member3Email'].map(name => data.get(name).trim().toLowerCase());
+  if (new Set(emails).size !== 3) {
+    feedback.textContent = 'Enter a different email address for each participant.';
     return;
   }
-  if (demo) {
-    feedback.textContent = 'Preview complete. No registration data was sent.';
+  const proof = data.get('proof');
+  if (!proof.size || proof.size > maxProofSize || !['image/jpeg', 'image/png', 'application/pdf'].includes(proof.type)) {
+    feedback.textContent = 'Attach one JPEG, PNG, or PDF file up to 5 MB.';
     return;
   }
-  button.disabled = true;
+  const submissionId = retryId ??= crypto.randomUUID();
+  data.set('submissionId', submissionId);
+  submit.disabled = true;
   feedback.textContent = 'Submitting registration…';
   try {
-    const response = await fetch(form.action, {
-      method: 'POST',
-      headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify(data),
-    });
+    const response = await fetch(form.action, {method: 'POST', body: data});
     const result = await response.json();
-    feedback.textContent = response.ok ? 'Team registered! Registration code: ' + result.id : 'Registration could not be completed. Check your details and try again.';
-    if (response.ok) form.reset();
+    if (response.ok) {
+      feedback.textContent = 'Registration code: ' + result.id + '\nPayment proof received · Pending review';
+      form.reset();
+      retryId = undefined;
+    } else {
+      feedback.textContent = result.error || 'Registration could not be completed. Please try again.';
+    }
   } catch {
     feedback.textContent = 'We couldn’t confirm your registration. Please try again.';
   } finally {
-    button.disabled = false;
+    submit.disabled = false;
   }
 });
