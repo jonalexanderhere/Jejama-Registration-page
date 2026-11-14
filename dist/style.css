@@ -27,15 +27,15 @@ header nav a:hover{border-color:var(--gold)}
 .crest{margin-bottom:.65rem}
 .hero h1{font-size:clamp(5rem,11vw,10rem);line-height:.79;font-weight:900;letter-spacing:-.055em;text-shadow:0 5px 20px #061d31}
 .hero h2{color:var(--gold);font-size:clamp(1.24rem,2.8vw,2rem);font-style:italic}
-.hero p{max-width:34ch}
 .actions{display:flex;flex-wrap:wrap;gap:.7rem;margin-top:1.4rem}
 .ribbon{position:relative;margin-top:-2rem;border:1px solid #9dc8da;border-radius:2rem;background:var(--navy);display:grid;grid-template-columns:repeat(3,1fr);text-align:center;padding:.75rem;color:var(--ivory);margin-bottom:1.5rem}
 .ribbon span+span{border-left:1px solid #8aa9bc}
 .section{padding-block:clamp(2.5rem,6vw,5rem)}
 .paper{background:radial-gradient(ellipse at 48% 22%,#edf6fc,var(--paper));color:var(--ink)}
 .about,.guide{display:grid;grid-template-columns:1fr 1fr;gap:clamp(1.4rem,5vw,5rem);align-items:center}
-.about p{max-width:47ch}
-.about img{width:min(100%,480px);justify-self:center;border-radius:10px}
+.about{grid-template-columns:minmax(0,1.7fr) minmax(0,1fr)}
+.about p{max-width:66ch}
+.about img{width:min(75%,290px);justify-self:center}
 .benefits,.timeline{list-style:none;padding:0;margin:2rem 0 0;display:grid;gap:1rem}
 .benefits{grid-template-columns:repeat(3,1fr)}
 .benefits li,.timeline li{border:1px solid #f6faff;border-radius:1.25rem;background:linear-gradient(145deg,var(--ivory),#deedf7);color:var(--ink);padding:1rem;text-align:center}
@@ -73,7 +73,6 @@ footer .shell{display:flex;justify-content:space-between;align-items:center;gap:
 .hero h1{font-size:clamp(2.65rem,4.3vw,5rem);line-height:.91;letter-spacing:-.04em}
 .hero h1 br{display:none}
 .hero h2{font-size:clamp(1.15rem,1.6vw,1.6rem);margin-top:.75rem}
-.hero p{font-size:clamp(.875rem,1.1vw,1rem);max-width:40ch;margin-inline:auto}
 .hero .actions{justify-content:center;margin-top:1.15rem}
 .hero .button{padding:.5rem .9rem}
 .ribbon{z-index:1;margin-bottom:0}
@@ -107,7 +106,7 @@ footer .shell{display:flex;justify-content:space-between;align-items:center;gap:
  .hero .actions{gap:.5rem}
 }
 @media(min-width:1001px){
- .hero h1,.hero p{text-shadow:0 2px 8px #041b31}
+ .hero h1{text-shadow:0 2px 8px #041b31}
 }
 #registration-dialog{width:min(600px,calc(100% - 2rem));max-height:calc(100dvh - 2rem);overflow:auto;border:1px solid var(--line);border-radius:1rem;padding:clamp(1rem,3vw,2rem);background:var(--navy);color:var(--ivory)}
 #registration-dialog::backdrop{background:#041a34e0}
