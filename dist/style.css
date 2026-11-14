@@ -152,3 +152,4 @@ footer .shell{display:flex;justify-content:space-between;align-items:center;gap:
  .timeline li::before{left:50%;transform:translate(-50%,-50%);top:9.82rem}
  .timeline li:nth-child(even)::before{top:16.18rem}
 }
+#guidebook-drive[hidden],#sponsor-logos[hidden],#sponsor-placeholder[hidden]{display:none}

@@ -6,6 +6,7 @@
     {"source": "/api/registrations", "destination": "/api/jejama"},
     {"source": "/api/proof-token", "destination": "/api/jejama"},
     {"source": "/api/site-content", "destination": "/api/jejama"},
+    {"source": "/api/sponsor-logo/:path*", "destination": "/api/jejama"},
     {"source": "/admin", "destination": "/api/jejama"},
     {"source": "/admin/:path*", "destination": "/api/jejama"}
   ]

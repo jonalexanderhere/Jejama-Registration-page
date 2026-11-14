@@ -63,6 +63,37 @@ if (globalThis.uploadJejamaProof) {
         const value = content[node.dataset.content];
         if (typeof value === 'string') node.textContent = value;
       }
+      for (let stage = 1; stage <= 4; stage++) {
+        const date = content['scheduled' + stage];
+        if (!date) continue;
+        const time = document.createElement('time');
+        time.dateTime = date;
+        time.textContent = new Intl.DateTimeFormat('en-GB', {
+          dateStyle: 'medium', timeZone: 'UTC',
+        }).format(new Date(date));
+        document.querySelector('[data-content="date' + stage + '"]').replaceChildren(time);
+      }
+      if (content.guidebookUrl) {
+        const link = document.querySelector('#guidebook-drive');
+        link.href = content.guidebookUrl;
+        link.hidden = false;
+        document.querySelector('[data-content="guidebook"]').hidden = !content.guidebook;
+      }
+      if (content.sponsors?.length) {
+        const logos = document.querySelector('#sponsor-logos');
+        for (const sponsor of content.sponsors) {
+          const card = document.createElement('div');
+          card.className = 'organization-logo';
+          const image = document.createElement('img');
+          image.src = '/api/sponsor-logo/' + encodeURIComponent(sponsor.id);
+          image.alt = sponsor.name;
+          image.loading = 'lazy';
+          card.append(image);
+          logos.append(card);
+        }
+        logos.hidden = false;
+        document.querySelector('#sponsor-placeholder').hidden = true;
+      }
     })
     .catch(() => {});
 }

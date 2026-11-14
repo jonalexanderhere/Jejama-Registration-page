@@ -1,8 +1,8 @@
+import {authorizeAdmin,adminLogin} from '../vercel/admin-auth.mjs';
 import {siteContent} from '../vercel/site-content.mjs';
 import {neon} from '@neondatabase/serverless';
 import {get, put, del} from '@vercel/blob';
 import {generateClientTokenFromReadWriteToken} from '@vercel/blob/client';
-import {timingSafeEqual, createHash} from 'node:crypto';
 import {register, admin} from '../worker/index.mjs';
 
 const types = ['image/jpeg', 'image/png', 'application/pdf'];
@@ -10,7 +10,6 @@ const limit = 5 * 1024 * 1024;
 const privateOptions = {access: 'private'};
 const pendingPath = id => 'pending/' + id;
 const savedPath = key => 'proofs/' + key;
-const digest = value => createHash('sha256').update(value).digest();
 let schema;
 
 function database() {
@@ -53,15 +52,18 @@ export default {
         return Response.json({token, pathname}, {headers: {'Cache-Control': 'no-store'}});
       }
 
+      if (url.pathname === '/admin/login' || url.pathname === '/admin/logout') return await adminLogin(request,url);
+      if ((url.pathname === '/admin' || url.pathname.startsWith('/admin/')) && !authorizeAdmin(request)) {
+        return new Response(null,{status:303,headers:{Location:'/admin/login','Cache-Control':'no-store'}});
+      }
       const env = {
         get DB() { return database(); },
-        authorizeAdmin(req) {
-          const email = process.env.JEJAMA_ADMIN_EMAIL;
-          const password = process.env.JEJAMA_ADMIN_PASSWORD;
-          if (!email || !password) return false;
-          const expected = 'Basic ' + Buffer.from(email + ':' + password).toString('base64');
-          return timingSafeEqual(digest(expected), digest(req.headers.get('authorization') || ''));
+        authorizeAdmin,
+        async saveSponsor(path, data, type) {
+          await put(path, data, {...privateOptions, contentType:type});
         },
+        async getSponsor(path) { return get(path, privateOptions); },
+        async deleteSponsor(path) { await del(path); },
         async readProof(id) {
           const file = await get(pendingPath(id), privateOptions);
           if (!file?.stream || file.blob.size > limit) return null;
@@ -82,7 +84,7 @@ export default {
       if (url.pathname === '/api/registrations' && request.method === 'POST') {
         return await register(request, env);
       }
-      if (url.pathname === '/api/site-content' || url.pathname === '/admin/content') return await siteContent(request, env, url);
+      if (url.pathname === '/api/site-content' || url.pathname === '/admin/content' || url.pathname.startsWith('/api/sponsor-logo/')) return await siteContent(request, env, url);
       if (url.pathname === '/admin' || url.pathname.startsWith('/admin/')) return await admin(request, env, url);
       return new Response('Not found', {status: 404});
     } catch (error) {
