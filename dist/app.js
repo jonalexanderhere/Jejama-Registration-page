@@ -12,8 +12,8 @@ async function detectBackend() {
     demo = true;
   } finally {
     if (demo) {
-      mode.textContent = 'Mode pratinjau. Formulir ini bisa dicoba tanpa mengirim data.';
-      button.childNodes[1].textContent = ' Uji Formulir ';
+      mode.textContent = 'Preview mode. You can test this form without sending your details.';
+      button.childNodes[1].textContent = ' Test Registration ';
     }
     button.disabled = false;
   }
@@ -24,15 +24,15 @@ form.addEventListener('submit', async (event) => {
   event.preventDefault();
   const data = Object.fromEntries([...new FormData(form)].map(([key, value]) => [key, value.trim()]));
   if (Object.values(data).some(value => !value)) {
-    feedback.textContent = 'Isi semua kolom sebelum melanjutkan.';
+    feedback.textContent = 'Fill in all fields before continuing.';
     return;
   }
   if (demo) {
-    feedback.textContent = 'Formulir valid. Pratinjau selesai tanpa mengirim data.';
+    feedback.textContent = 'Preview complete. No registration data was sent.';
     return;
   }
   button.disabled = true;
-  feedback.textContent = 'Mengirim pendaftaran…';
+  feedback.textContent = 'Submitting registration…';
   try {
     const response = await fetch(form.action, {
       method: 'POST',
@@ -40,10 +40,10 @@ form.addEventListener('submit', async (event) => {
       body: JSON.stringify(data),
     });
     const result = await response.json();
-    feedback.textContent = response.ok ? 'Kru terdaftar! Kode pendaftaran: ' + result.id : result.error;
+    feedback.textContent = response.ok ? 'Team registered! Registration code: ' + result.id : 'Registration could not be completed. Check your details and try again.';
     if (response.ok) form.reset();
   } catch {
-    feedback.textContent = 'Pengiriman belum terkonfirmasi. Coba lagi.';
+    feedback.textContent = 'We couldn’t confirm your registration. Please try again.';
   } finally {
     button.disabled = false;
   }
