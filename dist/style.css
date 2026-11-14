@@ -126,3 +126,10 @@ footer .shell{display:flex;justify-content:space-between;align-items:center;gap:
  @keyframes sail{from{transform:translate(-2px,1px) rotate(-8deg)}to{transform:translate(4px,-2px) rotate(7deg)}}
 }
 @media(max-width:480px){.participant-fields{grid-template-columns:1fr}}
+#event-partners{font-size:clamp(1.8rem,4vw,3rem)}
+.organization-grid{margin-top:1.4rem}
+.organization-card{display:grid;grid-template-rows:auto auto 1fr;gap:.6rem;padding:clamp(1rem,3vw,1.65rem);border:1px solid #547897;border-radius:1rem;background:var(--deep)}
+.organization-role{margin:0;color:var(--gold);font-size:.8rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase}
+.organization-logo{display:grid;place-items:center;min-height:8rem;margin-top:.4rem;padding:1rem;border-radius:.65rem;background:#edf6fc}
+.organization-logo img{max-height:6rem;width:auto;max-width:100%;object-fit:contain}
+.partnership-options{padding-top:0}

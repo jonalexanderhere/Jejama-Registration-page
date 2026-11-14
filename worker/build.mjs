@@ -9,6 +9,8 @@ const types = {
   'assets/treasure.webp': 'image/webp',
   'assets/guidebook.webp': 'image/webp',
   'assets/logo.webp': 'image/webp',
+  'assets/diskominfotik.webp': 'image/webp',
+  'assets/logolcs.webp': 'image/webp',
   'assets/cartoon-waves.svg': 'image/svg+xml',
 };
 const assets = Object.fromEntries(Object.entries(types).map(([file, type]) => [
