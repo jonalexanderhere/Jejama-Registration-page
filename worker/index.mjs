@@ -109,9 +109,10 @@ export async function admin(request, env, url) {
         '">Download payment proof</a></p><form method="post" action="/admin/status/' + id +
         '"><button name="status" value="verified">Mark Verified</button> <button name="status" value="rejected">Mark Rejected</button></form></article>';
     }).join('');
+    const editorLink = env.authorizeAdmin ? ' · <a href="/admin/content">Edit website content</a>' : '';
     return new Response('<!doctype html><html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Jejama CTF | Organizer Panel</title>' +
       '<style>body{font:1rem/1.5 system-ui;margin:2rem auto;padding:0 1rem;max-width:55rem;color:#0a2e46}article{border-top:1px solid #9db4c3;padding:1rem 0;overflow-wrap:anywhere}button{padding:.4rem .65rem}nav{display:flex;gap:1rem}</style>' +
-      '<main><a href="/">Back to Jejama CTF</a><h1>Team Registrations</h1>' + (rows || '<p>No registrations on this page.</p>') + '<nav>' +
+      '<main><a href="/">Back to Jejama CTF</a>' + editorLink + '<h1>Team Registrations</h1>' + (rows || '<p>No registrations on this page.</p>') + '<nav>' +
       (page ? '<a href="/admin?page=' + (page - 1) + '">Previous</a>' : '') +
       (results.length > 50 ? '<a href="/admin?page=' + (page + 1) + '">Next</a>' : '') + '</nav></main></html>',
     {headers: {...privateHeaders, 'Content-Type': 'text/html; charset=utf-8', 'Content-Security-Policy': "default-src 'none'; style-src 'unsafe-inline'; form-action 'self'; frame-ancestors 'none'; base-uri 'none'"}});

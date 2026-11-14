@@ -8,6 +8,7 @@ const types = {
   'assets/map.webp': 'image/webp',
   'assets/treasure.webp': 'image/webp',
   'assets/guidebook.webp': 'image/webp',
+  'assets/timeline-ship.webp': 'image/webp',
   'assets/logo.webp': 'image/webp',
   'assets/diskominfotik.webp': 'image/webp',
   'assets/logolcs.webp': 'image/webp',

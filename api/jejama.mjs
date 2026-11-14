@@ -1,3 +1,4 @@
+import {siteContent} from '../vercel/site-content.mjs';
 import {neon} from '@neondatabase/serverless';
 import {get, put, del} from '@vercel/blob';
 import {generateClientTokenFromReadWriteToken} from '@vercel/blob/client';
@@ -14,12 +15,12 @@ let schema;
 
 function database() {
   const sql = neon(process.env.DATABASE_URL || process.env.POSTGRES_URL);
-  schema ??= sql.query(`CREATE TABLE IF NOT EXISTS team_registrations (
+  schema ??= Promise.all([sql.query(`CREATE TABLE IF NOT EXISTS team_registrations (
     id TEXT PRIMARY KEY, team TEXT NOT NULL, participants TEXT NOT NULL,
     proof_key TEXT NOT NULL, status TEXT NOT NULL DEFAULT 'pending'
     CHECK (status IN ('pending', 'verified', 'rejected')),
     created_at TIMESTAMP NOT NULL DEFAULT (now() AT TIME ZONE 'UTC')
-  )`).catch(error => { schema = undefined; throw error; });
+  )`), sql.query('CREATE TABLE IF NOT EXISTS site_content (id INTEGER PRIMARY KEY, content TEXT NOT NULL)')]).catch(error => { schema = undefined; throw error; });
   return {
     prepare(query) {
       let index = 0;
@@ -81,6 +82,7 @@ export default {
       if (url.pathname === '/api/registrations' && request.method === 'POST') {
         return await register(request, env);
       }
+      if (url.pathname === '/api/site-content' || url.pathname === '/admin/content') return await siteContent(request, env, url);
       if (url.pathname === '/admin' || url.pathname.startsWith('/admin/')) return await admin(request, env, url);
       return new Response('Not found', {status: 404});
     } catch (error) {

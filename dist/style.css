@@ -136,3 +136,11 @@ footer .shell{display:flex;justify-content:space-between;align-items:center;gap:
 .media-logos{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:.75rem;margin-top:1rem}
 .media-logos .organization-logo{margin:0;background:#fff}
 .media-logos img{height:auto}
+.timeline-route{position:relative;height:5rem;margin:1.4rem auto 0;width:90%;color:#17668c}
+.timeline-route::before{content:"";position:absolute;inset:50% 0 auto;border-top:2px dashed currentColor}
+.timeline-route img{position:absolute;top:50%;left:0;width:4.5rem;height:4.5rem;object-fit:contain;transform:translate(-35%,-50%)}
+.timeline-route + .timeline{margin-top:.7rem}
+@media(prefers-reduced-motion:no-preference){
+ .timeline-route img{animation:timeline-sail 11s ease-in-out infinite alternate}
+ @keyframes timeline-sail{to{left:100%;transform:translate(-65%,-50%)}}
+}

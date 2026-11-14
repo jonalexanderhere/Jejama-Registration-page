@@ -53,3 +53,16 @@ form.addEventListener('submit', async (event) => {
     submit.disabled = false;
   }
 });
+
+const contentNodes = document.querySelectorAll('[data-content]');
+if (globalThis.uploadJejamaProof) {
+  fetch('/api/site-content')
+    .then(response => response.ok ? response.json() : {})
+    .then(content => {
+      for (const node of contentNodes) {
+        const value = content[node.dataset.content];
+        if (typeof value === 'string') node.textContent = value;
+      }
+    })
+    .catch(() => {});
+}
