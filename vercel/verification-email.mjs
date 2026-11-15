@@ -1,4 +1,5 @@
 import nodemailer from 'nodemailer';
+import {verificationMessage} from './verification-template.mjs';
 
 export async function readEmailLinks(db) {
   const row = await db.prepare('SELECT content FROM site_content WHERE id = ?').bind(2).first();
@@ -14,6 +15,7 @@ export async function notifyCaptain(db,id) {
   if (!user || !password || !twibbon || !group) throw new Error('Email configuration missing');
 
   const [captain] = JSON.parse(row.participants);
+  const message = verificationMessage({captain:captain.name,team:row.team,twibbon,group});
   const claim = await db.prepare("UPDATE team_registrations SET verification_email_id = 'sending' WHERE id = ? AND status = 'verified' AND verification_email_id IS NULL").bind(id).run();
   if (!claim.meta.changes) throw new Error('Email already processing');
   const smtp = nodemailer.createTransport({
@@ -24,8 +26,7 @@ export async function notifyCaptain(db,id) {
   try {
     info = await smtp.sendMail({
       from:{name:'Jejama CTF',address:user},to:captain.email,
-      subject:'Your Jejama CTF registration is verified',
-      text:['Hi '+captain.name+',','','Your team, '+row.team+', has been verified.','','Twibbon: '+twibbon,'Participant group: '+group,'','See you at Jejama CTF!'].join('\n'),
+      ...message,
     });
   } catch (error) {
     await db.prepare("UPDATE team_registrations SET verification_email_id = NULL WHERE id = ? AND verification_email_id = 'sending'").bind(id).run();
