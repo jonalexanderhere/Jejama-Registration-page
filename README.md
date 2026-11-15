@@ -14,4 +14,4 @@ The Vercel project builds from `main` with `npm run build`. The production envir
 
 Payment proofs upload directly to private Blob to support the 5 MB form limit. The registration endpoint validates the file before saving the team in Postgres. Organizers sign in at `/admin` using the configured credentials. Cloudflare Sites registrations and files are stored separately.
 
-Verification email on Vercel requires Production variables: `RESEND_API_KEY` (sensitive), `JEJAMA_EMAIL_FROM` (an address on a verified Resend domain), `JEJAMA_TWIBBON_URL`, and `JEJAMA_GROUP_URL` (sensitive if private). Redeploy after setting them.
+Verification emails use Gmail SMTP on Vercel. Set `JEJAMA_SMTP_USER` (sender Gmail address) and `JEJAMA_SMTP_PASSWORD` (Google App Password, sensitive) in Production and redeploy. Set both private links in **Website Content → Verification Email**. Emails go only to the team captain after verification.

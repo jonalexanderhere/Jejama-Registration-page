@@ -1,3 +1,4 @@
+import {readEmailLinks} from './verification-email.mjs';
 const defaultPartners = [
   {id:'jogja', name:'Jogja Cyber Security', category:'media', asset:'/assets/jogja-cyber-security.webp'},
   {id:'csrelated', name:'CSRelated Competitions', category:'media', asset:'/assets/csrelated-competitions.webp'},
@@ -52,6 +53,18 @@ export async function siteContent(request, env, url) {
   if (request.method === 'POST') {
     if (request.headers.get('origin') !== url.origin) return new Response('Invalid origin.', {status:403,headers});
     const body = await request.formData();
+    if (body.get('action') === 'email-links') {
+      const links = {};
+      for (const key of ['twibbon','group']) {
+        const value = String(body.get(key) || '').trim();
+        let url;
+        try { url = new URL(value); } catch { return new Response('Enter both HTTPS links.',{status:400,headers}); }
+        if (url.protocol !== 'https:' || url.username || url.password || value.length > 2000) return new Response('Enter both HTTPS links.',{status:400,headers});
+        links[key] = url.href;
+      }
+      await env.DB.prepare('INSERT INTO site_content (id, content) VALUES (?, ?) ON CONFLICT (id) DO UPDATE SET content = EXCLUDED.content').bind(2,JSON.stringify(links)).run();
+      return new Response(null,{status:303,headers:{...headers,Location:'/admin/content?emailLinksSaved=1#verification-email'}});
+    }
     const previous = await readContent(env.DB);
     const content = {};
     const oldSponsors = partners(previous);
@@ -96,6 +109,7 @@ export async function siteContent(request, env, url) {
   }
   if (request.method !== 'GET') return new Response(null,{status:405,headers});
   const content = await readContent(env.DB);
+  const emailLinks = await readEmailLinks(env.DB);
   const control = (key,label) => '<label>'+label+'<textarea maxlength="1000" name="'+key+'">'+escape(content[key]||'')+'</textarea></label>';
   const controls = Object.entries(fields).filter(([key])=>! /^(stage|date)/.test(key)).map(([key,label])=>control(key,label)).join('');
   const dates = [1,2,3,4].map(i=>'<fieldset><legend>Stage '+i+'</legend>'+control('stage'+i,'Title')+control('date'+i,'Fallback date text')+
@@ -107,7 +121,12 @@ export async function siteContent(request, env, url) {
     '<form method="post" enctype="multipart/form-data"><fieldset><legend>Page text</legend><div class="editor-grid">'+controls+'</div></fieldset><h2>Timeline</h2><div class="editor-grid">'+dates+'</div>'+
     '<fieldset><legend>Guidebook</legend><label>Google Drive link<input type="url" name="guidebookUrl" value="'+escape(content.guidebookUrl||'')+'" placeholder="https://drive.google.com/…"></label></fieldset>'+
     '<fieldset><legend>Partnership</legend>'+sponsors+'<label>Category<select name="sponsorCategory">'+categoryOptions('sponsor')+'</select></label><label>Partner name<input name="sponsorName" maxlength="100"></label><label>Logo · PNG, JPEG or WebP up to 2 MB<input type="file" name="sponsorLogo" accept="image/png,image/jpeg,image/webp"></label></fieldset>'+
-    '<button>Publish changes</button></form></main></html>',{
+    '<button>Publish changes</button></form><section id="verification-email"><h2>Verification Email</h2>'+
+    (url.searchParams.has('emailLinksSaved')?'<p class="notice" role="status">Email links saved.</p>':'')+
+    '<form method="post"><fieldset><legend>Captain-only links</legend><input type="hidden" name="action" value="email-links">'+
+    '<label>Twibbon link<input required type="url" name="twibbon" maxlength="2000" value="'+escape(emailLinks.twibbon||'')+'"></label>'+
+    '<label>Participant group link<input required type="url" name="group" maxlength="2000" value="'+escape(emailLinks.group||'')+'"></label>'+
+    '<button>Save email links</button></fieldset></form></section></main></html>',{
       headers:{...headers,'Content-Type':'text/html; charset=utf-8','Content-Security-Policy':"default-src 'none'; style-src 'self'; img-src 'self'; form-action 'self'; frame-ancestors 'none'; base-uri 'none'"},
     });
 }
