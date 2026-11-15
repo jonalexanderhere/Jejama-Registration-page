@@ -1,3 +1,15 @@
+const defaultPartners = [
+  {id:'jogja', name:'Jogja Cyber Security', category:'media', asset:'/assets/jogja-cyber-security.webp'},
+  {id:'csrelated', name:'CSRelated Competitions', category:'media', asset:'/assets/csrelated-competitions.webp'},
+];
+const partners = content => content.partners ?? [
+  ...(content.sponsors ?? []).map(logo => ({...logo, category:'sponsor'})),
+  ...defaultPartners,
+];
+const categoryOptions = category => ['sponsor','media'].map(value =>
+  '<option value="'+value+'"'+(value===category?' selected':'')+'>'+ (value==='media'?'Media Partner':'Sponsor')+'</option>').join('');
+const logoUrl = logo => logo.asset || '/api/sponsor-logo/'+logo.id;
+
 const fields = {
   tagline: 'Hero subtitle', intro: 'Hero description', challenge: 'Challenges announcement',
   prize: 'Prize Pool announcement', sponsor: 'Sponsorship description', guidebook: 'Guidebook announcement',
@@ -20,13 +32,14 @@ async function readContent(db) {
 
 export async function siteContent(request, env, url) {
   if (url.pathname === '/api/site-content' && request.method === 'GET') {
-    return Response.json(await readContent(env.DB), {headers});
+    const content = await readContent(env.DB);
+    return Response.json({...content, partners:partners(content)}, {headers});
   }
   if (url.pathname.startsWith('/api/sponsor-logo/') && request.method === 'GET') {
     const id = url.pathname.split('/').pop();
     if (!/^[a-f0-9-]{36}$/.test(id)) return new Response(null,{status:404});
     const content = await readContent(env.DB);
-    if (!content.sponsors?.some(sponsor => sponsor.id === id)) return new Response(null,{status:404});
+    if (!partners(content).some(sponsor => sponsor.id === id && !sponsor.asset)) return new Response(null,{status:404});
     const image = await env.getSponsor('sponsors/' + id);
     return image?.stream ? new Response(image.stream,{headers:{...headers,'Content-Type':image.blob.contentType}}) : new Response(null,{status:404});
   }
@@ -41,8 +54,10 @@ export async function siteContent(request, env, url) {
     const body = await request.formData();
     const previous = await readContent(env.DB);
     const content = {};
-    const oldSponsors = previous.sponsors || [];
-    const sponsors = oldSponsors.filter(sponsor => !body.getAll('removeSponsor').includes(sponsor.id));
+    const oldSponsors = partners(previous);
+    const category = key => body.get(key) === 'media' ? 'media' : 'sponsor';
+    const sponsors = oldSponsors.filter(sponsor => !body.getAll('removeSponsor').includes(sponsor.id))
+      .map(sponsor => ({...sponsor, category:body.has('category-'+sponsor.id) ? category('category-'+sponsor.id) : sponsor.category}));
     for (const key of Object.keys(fields)) {
       const value = body.get(key);
       if (typeof value !== 'string' || value.length > 1000) return new Response('Invalid content.', {status:400,headers});
@@ -71,12 +86,12 @@ export async function siteContent(request, env, url) {
       if (!type || bytes.length>2*1024*1024 || !name || name.length>100 || sponsors.length>=20) return new Response('Enter a sponsor name and select a PNG, JPEG or WebP up to 2 MB. Maximum 20 sponsors.',{status:400,headers});
       const id=crypto.randomUUID();
       await env.saveSponsor('sponsors/'+id,bytes,type);
-      sponsors.push({id,name});
+      sponsors.push({id,name,category:category('sponsorCategory')});
     }
-    content.sponsors=sponsors;
+    content.partners=sponsors;
     await env.DB.prepare('INSERT INTO site_content (id, content) VALUES (?, ?) ON CONFLICT (id) DO UPDATE SET content = EXCLUDED.content')
       .bind(1, JSON.stringify(content)).run();
-    await Promise.allSettled(oldSponsors.filter(old=>!sponsors.some(sponsor=>sponsor.id===old.id)).map(old=>env.deleteSponsor('sponsors/'+old.id)));
+    await Promise.allSettled(oldSponsors.filter(old=>!old.asset && !sponsors.some(sponsor=>sponsor.id===old.id)).map(old=>env.deleteSponsor('sponsors/'+old.id)));
     return new Response(null,{status:303,headers:{...headers,Location:'/admin/content?saved=1'}});
   }
   if (request.method !== 'GET') return new Response(null,{status:405,headers});
@@ -85,13 +100,13 @@ export async function siteContent(request, env, url) {
   const controls = Object.entries(fields).filter(([key])=>! /^(stage|date)/.test(key)).map(([key,label])=>control(key,label)).join('');
   const dates = [1,2,3,4].map(i=>'<fieldset><legend>Stage '+i+'</legend>'+control('stage'+i,'Title')+control('date'+i,'Fallback date text')+
     '<label>Event date<input type="date" name="scheduled'+i+'" value="'+escape(content['scheduled'+i]||'')+'"></label></fieldset>').join('');
-  const sponsors = (content.sponsors||[]).map(({id,name})=>'<label><img width="110" height="70" src="/api/sponsor-logo/'+id+'" alt="">'+escape(name)+'<span><input type="checkbox" name="removeSponsor" value="'+id+'"> Remove</span></label>').join('');
+  const sponsors = partners(content).map(logo => '<fieldset><legend>'+escape(logo.name)+'</legend><img width="110" height="70" src="'+logoUrl(logo)+'" alt=""><label>Category<select name="category-'+logo.id+'">'+categoryOptions(logo.category)+'</select></label><label><span><input type="checkbox" name="removeSponsor" value="'+logo.id+'"> Remove on publish</span></label></fieldset>').join('');
   return new Response('<!doctype html><html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Jejama CTF | Site Content</title><link rel="stylesheet" href="/admin-theme.css">'+
     '<main><nav><a href="/admin">Team registrations</a><a href="/">View website</a><form method="post" action="/admin/logout"><button>Sign out</button></form></nav><h1>Website Content</h1>'+
     (url.searchParams.has('saved')?'<p class="notice" role="status">Changes published.</p>':'')+
     '<form method="post" enctype="multipart/form-data"><fieldset><legend>Page text</legend>'+controls+'</fieldset><h2>Timeline</h2><div class="editor-grid">'+dates+'</div>'+
     '<fieldset><legend>Guidebook</legend><label>Google Drive link<input type="url" name="guidebookUrl" value="'+escape(content.guidebookUrl||'')+'" placeholder="https://drive.google.com/…"></label></fieldset>'+
-    '<fieldset><legend>Sponsors</legend>'+sponsors+'<label>Sponsor name<input name="sponsorName" maxlength="100"></label><label>Logo · PNG, JPEG or WebP up to 2 MB<input type="file" name="sponsorLogo" accept="image/png,image/jpeg,image/webp"></label></fieldset>'+
+    '<fieldset><legend>Partnership</legend>'+sponsors+'<label>Category<select name="sponsorCategory">'+categoryOptions('sponsor')+'</select></label><label>Partner name<input name="sponsorName" maxlength="100"></label><label>Logo · PNG, JPEG or WebP up to 2 MB<input type="file" name="sponsorLogo" accept="image/png,image/jpeg,image/webp"></label></fieldset>'+
     '<button>Publish changes</button></form></main></html>',{
       headers:{...headers,'Content-Type':'text/html; charset=utf-8','Content-Security-Policy':"default-src 'none'; style-src 'self'; img-src 'self'; form-action 'self'; frame-ancestors 'none'; base-uri 'none'"},
     });

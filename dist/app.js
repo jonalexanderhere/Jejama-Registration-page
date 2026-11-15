@@ -79,46 +79,25 @@ if (globalThis.uploadJejamaProof) {
         link.hidden = false;
         document.querySelector('[data-content="guidebook"]').hidden = !content.guidebook;
       }
-      if (content.sponsors?.length) {
-        const logos = document.querySelector('#sponsor-logos');
-        for (const sponsor of content.sponsors) {
+      if (Array.isArray(content.partners)) {
+        const sponsorLogos = document.querySelector('#sponsor-logos');
+        const mediaLogos = document.querySelector('#media .media-logos');
+        sponsorLogos.replaceChildren();
+        mediaLogos.replaceChildren();
+        for (const sponsor of content.partners) {
+          const logos = sponsor.category === 'media' ? mediaLogos : sponsorLogos;
           const card = document.createElement('div');
           card.className = 'organization-logo';
           const image = document.createElement('img');
-          image.src = '/api/sponsor-logo/' + encodeURIComponent(sponsor.id);
+          image.src = sponsor.asset || '/api/sponsor-logo/' + encodeURIComponent(sponsor.id);
           image.alt = sponsor.name;
           image.loading = 'lazy';
           card.append(image);
           logos.append(card);
         }
-        logos.hidden = false;
-        document.querySelector('#sponsor-placeholder').hidden = true;
+        sponsorLogos.hidden = !sponsorLogos.childElementCount;
+        document.querySelector('#sponsor-placeholder').hidden = !sponsorLogos.hidden;
       }
     })
     .catch(() => {});
-}
-
-const sailingRoute = document.querySelector('#sailing-route');
-const timelineShip = sailingRoute?.nextElementSibling;
-const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)');
-if (timelineShip) {
-  let visible = false;
-  let frame;
-  const length = sailingRoute.getTotalLength();
-  const sail = time => {
-    const progress = (1 - Math.cos(time * Math.PI / 10000)) / 2;
-    const point = sailingRoute.getPointAtLength(length * (.035 + .93 * progress));
-    timelineShip.setAttribute('transform', 'translate(' + point.x + ' ' + point.y + ')');
-    frame = requestAnimationFrame(sail);
-  };
-  const update = () => {
-    cancelAnimationFrame(frame);
-    if (visible && !reducedMotion.matches) frame = requestAnimationFrame(sail);
-    else timelineShip.setAttribute('transform', 'translate(125 47)');
-  };
-  new IntersectionObserver(([entry]) => {
-    visible = entry.isIntersecting;
-    update();
-  }).observe(sailingRoute.ownerSVGElement);
-  reducedMotion.addEventListener('change', update);
 }
