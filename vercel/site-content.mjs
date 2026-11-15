@@ -116,17 +116,23 @@ export async function siteContent(request, env, url) {
     '<label>Event date<input type="date" name="scheduled'+i+'" value="'+escape(content['scheduled'+i]||'')+'"></label></fieldset>').join('');
   const sponsors = partners(content).map(logo => '<fieldset><legend>'+escape(logo.name)+'</legend><img width="110" height="70" src="'+logoUrl(logo)+'" alt=""><label>Category<select name="category-'+logo.id+'">'+categoryOptions(logo.category)+'</select></label><label><span><input type="checkbox" name="removeSponsor" value="'+logo.id+'"> Remove on publish</span></label></fieldset>').join('');
   return new Response('<!doctype html><html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Jejama CTF | Site Content</title><link rel="stylesheet" href="/admin-theme.css">'+
-    '<main><nav class="admin-nav" aria-label="Admin navigation"><a class="admin-brand" href="/admin"><img src="/assets/logo.webp" width="36" height="36" alt=""> Jejama CTF</a><a href="/admin">Registrations</a><a href="/admin/content" aria-current="page">Website Content</a><a class="view-site" href="/">View website ↗</a><form method="post" action="/admin/logout"><button>Sign out</button></form></nav><header class="page-heading"><h1>Website Content</h1><p class="muted">Manage announcements, timeline dates, the guidebook, and partner logos.</p></header>'+
+    '<main class="content-dashboard"><nav class="admin-nav" aria-label="Admin navigation"><a class="admin-brand" href="/admin"><img src="/assets/logo.webp" width="36" height="36" alt=""> Jejama CTF</a><a href="/admin">Registrations</a><a href="/admin/content" aria-current="page">Website Content</a><a class="view-site" href="/">View website ↗</a><form method="post" action="/admin/logout"><button>Sign out</button></form></nav>'+
+    '<header class="workspace-heading"><h1>Website Content</h1><p>Update your event website and captain email links.</p></header>'+
+    '<div class="workspace-layout"><aside class="workspace-menu"><nav aria-label="Content sections"><a href="#page-text">Page copy</a><a href="#event-timeline">Timeline</a><a href="#event-guidebook">Guidebook</a><a href="#event-partnership">Partnership</a><a href="#verification-email">Verification email</a></nav></aside><div class="workspace-body">'+
     (url.searchParams.has('saved')?'<p class="notice" role="status">Changes published.</p>':'')+
-    '<form method="post" enctype="multipart/form-data"><fieldset><legend>Page text</legend><div class="editor-grid">'+controls+'</div></fieldset><h2>Timeline</h2><div class="editor-grid">'+dates+'</div>'+
-    '<fieldset><legend>Guidebook</legend><label>Google Drive link<input type="url" name="guidebookUrl" value="'+escape(content.guidebookUrl||'')+'" placeholder="https://drive.google.com/…"></label></fieldset>'+
-    '<fieldset><legend>Partnership</legend>'+sponsors+'<label>Category<select name="sponsorCategory">'+categoryOptions('sponsor')+'</select></label><label>Partner name<input name="sponsorName" maxlength="100"></label><label>Logo · PNG, JPEG or WebP up to 2 MB<input type="file" name="sponsorLogo" accept="image/png,image/jpeg,image/webp"></label></fieldset>'+
-    '<button>Publish changes</button></form><section id="verification-email"><h2>Verification Email</h2>'+
+    '<form method="post" enctype="multipart/form-data" class="content-form">'+
+    '<section class="workspace-card" id="page-text"><h2>Page copy</h2><p class="muted">Leave a field empty to use the original site copy.</p><div class="editor-grid">'+controls+'</div></section>'+
+    '<section class="workspace-card" id="event-timeline"><h2>Timeline</h2><p class="muted">Set a calendar date or use custom date text for each stage.</p><div class="editor-grid">'+dates+'</div></section>'+
+    '<section class="workspace-card" id="event-guidebook"><h2>Guidebook</h2><label>Google Drive link<input type="url" name="guidebookUrl" value="'+escape(content.guidebookUrl||'')+'" placeholder="https://drive.google.com/…"></label></section>'+
+    '<section class="workspace-card" id="event-partnership"><h2>Partnership</h2><div class="editor-grid partner-grid">'+(sponsors||'<p class="muted">No partner logos yet.</p>')+'</div>'+
+    '<fieldset><legend>Add partner</legend><div class="editor-grid"><label>Category<select name="sponsorCategory">'+categoryOptions('sponsor')+'</select></label><label>Partner name<input name="sponsorName" maxlength="100"></label></div><label>Logo <span class="muted">PNG, JPEG or WebP · up to 2 MB</span><input type="file" name="sponsorLogo" accept="image/png,image/jpeg,image/webp"></label></fieldset></section>'+
+    '<div class="publish-bar"><button>Publish changes</button></div></form>'+
+    '<section class="workspace-card" id="verification-email"><h2>Verification email</h2><p class="muted">These links are shared only with the team captain.</p>'+
     (url.searchParams.has('emailLinksSaved')?'<p class="notice" role="status">Email links saved.</p>':'')+
-    '<form method="post"><fieldset><legend>Captain-only links</legend><input type="hidden" name="action" value="email-links">'+
+    '<form method="post"><input type="hidden" name="action" value="email-links">'+
     '<label>Twibbon link<input required type="url" name="twibbon" maxlength="2000" value="'+escape(emailLinks.twibbon||'')+'"></label>'+
     '<label>Participant group link<input required type="url" name="group" maxlength="2000" value="'+escape(emailLinks.group||'')+'"></label>'+
-    '<button>Save email links</button></fieldset></form></section></main></html>',{
+    '<button>Save email links</button></form></section></div></div></main></html>',{
       headers:{...headers,'Content-Type':'text/html; charset=utf-8','Content-Security-Policy':"default-src 'none'; style-src 'self'; img-src 'self'; form-action 'self'; frame-ancestors 'none'; base-uri 'none'"},
     });
 }

@@ -31,3 +31,21 @@ legend{font-weight:750;color:var(--navy);padding:0 .4rem}
 img{max-width:100%;object-fit:contain}
 :focus-visible{outline:3px solid #b56c05;outline-offset:3px}
 @media(max-width:600px){.admin-nav .admin-brand{flex-basis:100%}.view-site{margin-left:0}.team-card header{align-items:flex-start}}
+
+.content-dashboard{width:min(100% - 2rem,78rem)}
+.workspace-heading{margin:1.25rem 0;padding:clamp(1.25rem,4vw,2.5rem);border-radius:1rem;background:linear-gradient(115deg,#102e4c,#1c527e);color:#e8f2fc}
+.workspace-heading h1{color:white}.workspace-heading p{margin:.5rem 0 0}
+.workspace-layout{display:grid;grid-template-columns:12.5rem minmax(0,1fr);gap:1.25rem;align-items:start}
+.workspace-menu{position:sticky;top:1rem;background:white;border:1px solid var(--line);border-radius:.85rem;padding:.55rem}
+.workspace-menu nav{display:grid;gap:.2rem}
+.workspace-menu a{color:var(--ink);text-decoration:none;padding:.55rem .7rem;border-radius:.45rem;font-weight:650}
+.workspace-menu a:hover,.workspace-menu a:focus-visible{background:#e5f0fa;color:var(--blue)}
+.workspace-card{scroll-margin-top:1rem;background:white;border:1px solid var(--line);border-radius:.85rem;padding:clamp(1rem,3vw,1.6rem);margin:0 0 1rem}
+.workspace-card h2{margin-bottom:.65rem}
+.workspace-card:target{border-color:#5282ad}
+.workspace-card fieldset{background:#f7fafd}
+.workspace-card textarea{min-height:5.1rem}
+.partner-grid{margin:.9rem 0}
+.partner-grid img{display:block;max-width:100%;object-fit:contain;background:#fff;border-radius:.45rem}
+.publish-bar{position:sticky;bottom:0;z-index:1;display:flex;justify-content:flex-end;background:#fff;border:1px solid var(--line);padding:.75rem;border-radius:.75rem;margin-bottom:1rem;box-shadow:0 -5px 16px #102e4c0a}
+@media(max-width:760px){.workspace-layout{grid-template-columns:minmax(0,1fr)}.workspace-menu{position:static}.workspace-menu nav{display:flex}.workspace-menu a{font-size:.9rem}.publish-bar{position:static}}
