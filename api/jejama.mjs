@@ -60,6 +60,7 @@ export default {
       const env = {
         get DB() { return database(); },
         authorizeAdmin,
+        async deletePendingProof(id) { await del(pendingPath(id)); },
         notifyCaptain(id) { return notifyCaptain(database(),id); },
         async saveSponsor(path, data, type) {
           await put(path, data, {...privateOptions, contentType:type});

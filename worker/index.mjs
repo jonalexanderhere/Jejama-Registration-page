@@ -97,23 +97,28 @@ export async function admin(request, env, url) {
   if (!env.authorizeAdmin && (!user || !allowed.includes(email))) return badRequest('Organizer access required.', 403);
 
   if (url.pathname === '/admin' && request.method === 'GET') {
-    const {results} = await env.DB.prepare('SELECT id, team, participants, status, created_at FROM team_registrations ORDER BY created_at DESC, id DESC LIMIT 51 OFFSET ?')
+    const emailColumn = env.notifyCaptain ? ', verification_email_id' : '';
+    const {results} = await env.DB.prepare('SELECT id, team, participants, status, created_at' + emailColumn + ' FROM team_registrations ORDER BY created_at DESC, id DESC LIMIT 51 OFFSET ?')
       .bind(50 * Math.min(100000, Math.max(0, Math.trunc(Number(url.searchParams.get('page')) || 0)))).all();
     const page = Math.min(100000, Math.max(0, Math.trunc(Number(url.searchParams.get('page')) || 0)));
     const rows = results.slice(0, 50).map(row => {
       const id = encodeURIComponent(row.id);
       const participants = JSON.parse(row.participants).map(({name, email}) =>
         '<li>' + escapeHtml(name) + ' · ' + escapeHtml(email) + '</li>').join('');
+      const action = '<form method="post" action="/admin/status/' + id + '">';
+      const controls = row.status === 'verified'
+        ? (env.notifyCaptain && !row.verification_email_id ? action + '<button name="status" value="retry-email">Retry captain email</button></form>' : '') +
+          (url.searchParams.get('proofCleanup') === row.id ? action + '<button name="status" value="retry-cleanup">Retry proof deletion</button></form>' : '')
+        : '<p><a href="/admin/proof/' + id + '">Download payment proof</a></p>' + action +
+          '<button name="status" value="verified">Mark Verified</button> <button class="danger" name="status" value="rejected">Mark Rejected</button></form>';
       return '<article class="team-card"><header><h2>' + escapeHtml(row.team) + '</h2><span class="status status-' + escapeHtml(row.status) + '">' + escapeHtml(row.status) + '</span></header><p class="team-meta">' + escapeHtml(row.id) + ' · ' + escapeHtml(row.created_at) +
-        ' UTC</p><ol>' + participants + '</ol><p><a href="/admin/proof/' + id +
-        '">Download payment proof</a></p><form method="post" action="/admin/status/' + id +
-        '"><button name="status" value="verified">Mark Verified</button> <button class="danger" name="status" value="rejected">Mark Rejected</button></form></article>';
+        ' UTC</p><ol>' + participants + '</ol>' + controls + '</article>';
     }).join('');
     const editorLink = env.authorizeAdmin ? '<a href="/admin" aria-current="page">Registrations</a><a href="/admin/content">Website Content</a><a class="view-site" href="/">View website ↗</a><form method="post" action="/admin/logout"><button>Sign out</button></form>' : '';
     return new Response('<!doctype html><html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Jejama CTF | Organizer Panel</title>' +
       (env.authorizeAdmin ? '' : '<style>body{font:1rem/1.5 system-ui;margin:2rem auto;padding:0 1rem;max-width:55rem;color:#0a2e46}article{border-top:1px solid #9db4c3;padding:1rem 0;overflow-wrap:anywhere}button{padding:.4rem .65rem}nav{display:flex;gap:1rem}</style>') +
       (env.authorizeAdmin ? '<link rel="stylesheet" href="/admin-theme.css">' : '') +
-      '<main><nav class="admin-nav" aria-label="Admin navigation"><a class="admin-brand" href="/"><img src="/assets/logo.webp" width="36" height="36" alt=""> Jejama CTF</a>' + editorLink + '</nav><header class="page-heading"><h1>Team Registrations</h1><p class="muted">Review participant details and payment proofs.</p></header>' + (url.searchParams.get('email') === 'failed' ? '<p role="alert">Team verified. Email could not be confirmed. Check email settings and select Mark Verified again to retry.</p>' : url.searchParams.get('email') === 'accepted' ? '<p class="notice" role="status">Team verified. Captain email accepted for sending.</p>' : '') + (rows || '<p>No registrations on this page.</p>') + '<nav>' +
+      '<main><nav class="admin-nav" aria-label="Admin navigation"><a class="admin-brand" href="/"><img src="/assets/logo.webp" width="36" height="36" alt=""> Jejama CTF</a>' + editorLink + '</nav><header class="page-heading"><h1>Team Registrations</h1><p class="muted">Review participant details and payment proofs.</p></header>' + (url.searchParams.get('email') === 'failed' ? '<p role="alert">Team verified. Email could not be confirmed. Check email settings and select Retry captain email.</p>' : url.searchParams.get('email') === 'accepted' ? '<p class="notice" role="status">Team verified. Captain email accepted for sending.</p>' : '') + (url.searchParams.has('proofCleanup') ? '<p role="alert">Payment proof deletion could not be confirmed. Select Retry proof deletion on the team card.</p>' : '') + (rows || '<p>No registrations on this page.</p>') + '<nav>' +
       (page ? '<a href="/admin?page=' + (page - 1) + '">Previous</a>' : '') +
       (results.length > 50 ? '<a href="/admin?page=' + (page + 1) + '">Next</a>' : '') + '</nav></main></html>',
     {headers: {...privateHeaders, 'Content-Type': 'text/html; charset=utf-8', 'Content-Security-Policy': "default-src 'none'; style-src 'self' 'unsafe-inline'; img-src 'self'; form-action 'self'; frame-ancestors 'none'; base-uri 'none'"}});
@@ -123,7 +128,7 @@ export async function admin(request, env, url) {
   if (!route || !uuid.test(route[2])) return badRequest('Not found.', 404);
   const [, action, id] = route;
   if (action === 'proof' && request.method === 'GET') {
-    const row = await env.DB.prepare('SELECT proof_key FROM team_registrations WHERE id = ?').bind(id).first();
+    const row = await env.DB.prepare('SELECT proof_key FROM team_registrations WHERE id = ? AND status <> ?').bind(id,'verified').first();
     const proof = row && await env.BUCKET.get(row.proof_key);
     if (!proof) return badRequest('Payment proof not found.', 404);
     const extension = {'image/jpeg': 'jpg', 'image/png': 'png', 'application/pdf': 'pdf'}[proof.httpMetadata?.contentType] || 'bin';
@@ -133,19 +138,34 @@ export async function admin(request, env, url) {
   if (action === 'status' && request.method === 'POST') {
     if (request.headers.get('origin') !== url.origin) return badRequest('Invalid request origin.', 403);
     const {status} = Object.fromEntries(await request.formData());
-    if (!['verified', 'rejected'].includes(status)) return badRequest('Choose Verified or Rejected.');
-    const result = await env.DB.prepare('UPDATE team_registrations SET status = ? WHERE id = ?').bind(status, id).run();
-    if (!result.meta.changes) return badRequest('Registration not found.', 404);
-    let location = '/admin';
-    if (status === 'verified' && env.notifyCaptain) {
+    if (!['verified', 'rejected', 'retry-email', 'retry-cleanup'].includes(status)) return badRequest('Invalid action.');
+    if (status === 'rejected') {
+      const result = await env.DB.prepare('UPDATE team_registrations SET status = ? WHERE id = ? AND status <> ?').bind(status,id,'verified').run();
+      if (!result.meta.changes) return badRequest('Registration unavailable for rejection.', 409);
+      return new Response(null,{status:303,headers:{...privateHeaders,Location:'/admin'}});
+    }
+    if (status === 'verified') {
+      await env.DB.prepare('UPDATE team_registrations SET status = ? WHERE id = ? AND status <> ?').bind('verified',id,'verified').run();
+    }
+    const row = await env.DB.prepare('SELECT proof_key FROM team_registrations WHERE id = ? AND status = ?').bind(id,'verified').first();
+    if (!row) return badRequest('Verified registration not found.',404);
+
+    const query = new URLSearchParams();
+    try {
+      await env.BUCKET.delete(row.proof_key);
+      await env.deletePendingProof?.(id);
+    } catch {
+      query.set('proofCleanup',id);
+    }
+    if (status !== 'retry-cleanup' && env.notifyCaptain) {
       try {
         await env.notifyCaptain(id);
-        location += '?email=accepted';
+        query.set('email','accepted');
       } catch {
-        location += '?email=failed';
+        query.set('email','failed');
       }
     }
-    return new Response(null, {status: 303, headers: {...privateHeaders, Location: location}});
+    return new Response(null,{status:303,headers:{...privateHeaders,Location:'/admin'+(query.size?'?'+query:'')}});
   }
   return badRequest('Method not allowed.', 405);
 }
