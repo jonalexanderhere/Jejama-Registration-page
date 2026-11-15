@@ -113,7 +113,7 @@ export async function admin(request, env, url) {
     return new Response('<!doctype html><html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Jejama CTF | Organizer Panel</title>' +
       (env.authorizeAdmin ? '' : '<style>body{font:1rem/1.5 system-ui;margin:2rem auto;padding:0 1rem;max-width:55rem;color:#0a2e46}article{border-top:1px solid #9db4c3;padding:1rem 0;overflow-wrap:anywhere}button{padding:.4rem .65rem}nav{display:flex;gap:1rem}</style>') +
       (env.authorizeAdmin ? '<link rel="stylesheet" href="/admin-theme.css">' : '') +
-      '<main><nav class="admin-nav" aria-label="Admin navigation"><a class="admin-brand" href="/"><img src="/assets/logo.webp" width="36" height="36" alt=""> Jejama CTF</a>' + editorLink + '</nav><header class="page-heading"><h1>Team Registrations</h1><p class="muted">Review participant details and payment proofs.</p></header>' + (rows || '<p>No registrations on this page.</p>') + '<nav>' +
+      '<main><nav class="admin-nav" aria-label="Admin navigation"><a class="admin-brand" href="/"><img src="/assets/logo.webp" width="36" height="36" alt=""> Jejama CTF</a>' + editorLink + '</nav><header class="page-heading"><h1>Team Registrations</h1><p class="muted">Review participant details and payment proofs.</p></header>' + (url.searchParams.get('email') === 'failed' ? '<p role="alert">Team verified. Email could not be confirmed. Check email settings and select Mark Verified again to retry.</p>' : url.searchParams.get('email') === 'accepted' ? '<p class="notice" role="status">Team verified. Captain email accepted for sending.</p>' : '') + (rows || '<p>No registrations on this page.</p>') + '<nav>' +
       (page ? '<a href="/admin?page=' + (page - 1) + '">Previous</a>' : '') +
       (results.length > 50 ? '<a href="/admin?page=' + (page + 1) + '">Next</a>' : '') + '</nav></main></html>',
     {headers: {...privateHeaders, 'Content-Type': 'text/html; charset=utf-8', 'Content-Security-Policy': "default-src 'none'; style-src 'self' 'unsafe-inline'; img-src 'self'; form-action 'self'; frame-ancestors 'none'; base-uri 'none'"}});
@@ -136,7 +136,16 @@ export async function admin(request, env, url) {
     if (!['verified', 'rejected'].includes(status)) return badRequest('Choose Verified or Rejected.');
     const result = await env.DB.prepare('UPDATE team_registrations SET status = ? WHERE id = ?').bind(status, id).run();
     if (!result.meta.changes) return badRequest('Registration not found.', 404);
-    return new Response(null, {status: 303, headers: {...privateHeaders, Location: '/admin'}});
+    let location = '/admin';
+    if (status === 'verified' && env.notifyCaptain) {
+      try {
+        await env.notifyCaptain(id);
+        location += '?email=accepted';
+      } catch {
+        location += '?email=failed';
+      }
+    }
+    return new Response(null, {status: 303, headers: {...privateHeaders, Location: location}});
   }
   return badRequest('Method not allowed.', 405);
 }

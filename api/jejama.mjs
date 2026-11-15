@@ -1,3 +1,4 @@
+import {notifyCaptain} from '../vercel/verification-email.mjs';
 import {authorizeAdmin,adminLogin} from '../vercel/admin-auth.mjs';
 import {siteContent} from '../vercel/site-content.mjs';
 import {neon} from '@neondatabase/serverless';
@@ -19,7 +20,7 @@ function database() {
     proof_key TEXT NOT NULL, status TEXT NOT NULL DEFAULT 'pending'
     CHECK (status IN ('pending', 'verified', 'rejected')),
     created_at TIMESTAMP NOT NULL DEFAULT (now() AT TIME ZONE 'UTC')
-  )`), sql.query('CREATE TABLE IF NOT EXISTS site_content (id INTEGER PRIMARY KEY, content TEXT NOT NULL)')]).catch(error => { schema = undefined; throw error; });
+  )`), sql.query('CREATE TABLE IF NOT EXISTS site_content (id INTEGER PRIMARY KEY, content TEXT NOT NULL)')]).then(() => sql.query('ALTER TABLE team_registrations ADD COLUMN IF NOT EXISTS verification_email_id TEXT')).catch(error => { schema = undefined; throw error; });
   return {
     prepare(query) {
       let index = 0;
@@ -59,6 +60,7 @@ export default {
       const env = {
         get DB() { return database(); },
         authorizeAdmin,
+        notifyCaptain(id) { return notifyCaptain(database(),id); },
         async saveSponsor(path, data, type) {
           await put(path, data, {...privateOptions, contentType:type});
         },
