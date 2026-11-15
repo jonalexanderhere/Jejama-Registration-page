@@ -104,19 +104,19 @@ export async function admin(request, env, url) {
       const id = encodeURIComponent(row.id);
       const participants = JSON.parse(row.participants).map(({name, email}) =>
         '<li>' + escapeHtml(name) + ' · ' + escapeHtml(email) + '</li>').join('');
-      return '<article><h2>' + escapeHtml(row.team) + '</h2><p>' + escapeHtml(row.id) + ' · ' + escapeHtml(row.created_at) +
-        ' UTC · <strong>' + escapeHtml(row.status) + '</strong></p><ol>' + participants + '</ol><p><a href="/admin/proof/' + id +
+      return '<article class="team-card"><header><h2>' + escapeHtml(row.team) + '</h2><span class="status status-' + escapeHtml(row.status) + '">' + escapeHtml(row.status) + '</span></header><p class="team-meta">' + escapeHtml(row.id) + ' · ' + escapeHtml(row.created_at) +
+        ' UTC</p><ol>' + participants + '</ol><p><a href="/admin/proof/' + id +
         '">Download payment proof</a></p><form method="post" action="/admin/status/' + id +
-        '"><button name="status" value="verified">Mark Verified</button> <button name="status" value="rejected">Mark Rejected</button></form></article>';
+        '"><button name="status" value="verified">Mark Verified</button> <button class="danger" name="status" value="rejected">Mark Rejected</button></form></article>';
     }).join('');
-    const editorLink = env.authorizeAdmin ? ' <a href="/admin/content">Edit website content</a><form method="post" action="/admin/logout"><button>Sign out</button></form>' : '';
+    const editorLink = env.authorizeAdmin ? '<a href="/admin" aria-current="page">Registrations</a><a href="/admin/content">Website Content</a><a class="view-site" href="/">View website ↗</a><form method="post" action="/admin/logout"><button>Sign out</button></form>' : '';
     return new Response('<!doctype html><html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Jejama CTF | Organizer Panel</title>' +
-      '<style>body{font:1rem/1.5 system-ui;margin:2rem auto;padding:0 1rem;max-width:55rem;color:#0a2e46}article{border-top:1px solid #9db4c3;padding:1rem 0;overflow-wrap:anywhere}button{padding:.4rem .65rem}nav{display:flex;gap:1rem}</style>' +
+      (env.authorizeAdmin ? '' : '<style>body{font:1rem/1.5 system-ui;margin:2rem auto;padding:0 1rem;max-width:55rem;color:#0a2e46}article{border-top:1px solid #9db4c3;padding:1rem 0;overflow-wrap:anywhere}button{padding:.4rem .65rem}nav{display:flex;gap:1rem}</style>') +
       (env.authorizeAdmin ? '<link rel="stylesheet" href="/admin-theme.css">' : '') +
-      '<main><nav><a href="/">Back to Jejama CTF</a>' + editorLink + '</nav><h1>Team Registrations</h1>' + (rows || '<p>No registrations on this page.</p>') + '<nav>' +
+      '<main><nav class="admin-nav" aria-label="Admin navigation"><a class="admin-brand" href="/"><img src="/assets/logo.webp" width="36" height="36" alt=""> Jejama CTF</a>' + editorLink + '</nav><header class="page-heading"><h1>Team Registrations</h1><p class="muted">Review participant details and payment proofs.</p></header>' + (rows || '<p>No registrations on this page.</p>') + '<nav>' +
       (page ? '<a href="/admin?page=' + (page - 1) + '">Previous</a>' : '') +
       (results.length > 50 ? '<a href="/admin?page=' + (page + 1) + '">Next</a>' : '') + '</nav></main></html>',
-    {headers: {...privateHeaders, 'Content-Type': 'text/html; charset=utf-8', 'Content-Security-Policy': "default-src 'none'; style-src 'self' 'unsafe-inline'; form-action 'self'; frame-ancestors 'none'; base-uri 'none'"}});
+    {headers: {...privateHeaders, 'Content-Type': 'text/html; charset=utf-8', 'Content-Security-Policy': "default-src 'none'; style-src 'self' 'unsafe-inline'; img-src 'self'; form-action 'self'; frame-ancestors 'none'; base-uri 'none'"}});
   }
 
   const route = /^\/admin\/(proof|status)\/([^/]+)$/.exec(url.pathname);
