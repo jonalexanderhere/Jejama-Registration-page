@@ -105,11 +105,15 @@
 <dialog id="registration-dialog" aria-labelledby="registration-title" aria-describedby="registration-description">
 <div class="dialog-heading"><h2 id="registration-title">Pendaftaran Tim</h2><button type="button" id="close-registration" autofocus>Tutup</button></div>
 <form id="registration" action="/api/registrations" method="post" enctype="multipart/form-data">
-<p id="registration-description">Ketua tim mewakili pendaftaran tim berisi 3 orang. Isi data ketua, unggah dokumen, lalu kirim pendaftaran.</p>
+<p id="registration-description">Ketua tim mewakili pendaftaran tim berisi 3 orang. Isi data ketua dan nama kedua anggota, unggah dokumen, lalu kirim pendaftaran.</p>
 <div class="registration-team"><label>Nama tim<input name="team" required maxlength="80" placeholder="Contoh: Kru Siger"></label></div>
 <fieldset><legend>Ketua Tim</legend><div class="participant-fields">
 <label>Nama lengkap<input name="captainName" required maxlength="100"></label>
 <label>Alamat email<input name="captainEmail" type="email" required maxlength="254"></label>
+</div></fieldset>
+<fieldset><legend>Anggota Tim</legend><div class="participant-fields">
+<label>Nama anggota 2<input name="member2Name" required maxlength="100" autocomplete="off"></label>
+<label>Nama anggota 3<input name="member3Name" required maxlength="100" autocomplete="off"></label>
 </div></fieldset>
 <fieldset><legend>Dokumen identitas</legend><p>Ketua tim cukup melampirkan salah satu dokumen identitas: KTP, KTM, atau kartu pelajar dalam format PDF.</p><label>PDF identitas ketua tim<input name="identity" type="file" accept="application/pdf" required></label></fieldset>
 <fieldset><legend>Bukti Mengikuti Instagram dan Publikasi</legend><p>Ikuti <a href="https://www.instagram.com/lampungcysec/" target="_blank" rel="noopener noreferrer">@lampungcysec</a>. Tangkapan layar wajib menampilkan nama pengguna dan status telah mengikuti akun tersebut milik ketua tim.</p><p>Bagikan ulang publikasi resmi pendaftaran Jejama CTF melalui Instagram Story. Cantumkan tag @lampungcysec dan minimal tiga akun teman. Gabungkan tangkapan layar bukti mengikuti dan publikasi menjadi satu PDF.</p><label>PDF bukti media sosial<input name="social" type="file" accept="application/pdf" required></label><p>Ukuran setiap berkas maksimal 5 MB.</p></fieldset>

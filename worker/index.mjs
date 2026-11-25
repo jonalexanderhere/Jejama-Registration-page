@@ -47,12 +47,15 @@ export async function register(request, env) {
   };
   const id = field('submissionId').toLowerCase();
   const team = field('team');
-  const participants = ['captain'].map(role => ({
-    name: field(role + 'Name'), email: field(role + 'Email').toLowerCase(),
-  }));
-  if (!uuid.test(id) || !team || team.length > 80 || participants.some(({name, email}) =>
-    !name || name.length > 100 || email.length > 254 || !emailPattern.test(email))) {
-    return badRequest('Isi nama tim, nama ketua, dan email ketua yang valid.');
+  const participants = [
+    {name:field('captainName'),email:field('captainEmail').toLowerCase()},
+    {name:field('member2Name')},
+    {name:field('member3Name')},
+  ];
+  if (!uuid.test(id) || !team || team.length > 80 ||
+      participants.some(({name}) => !name || name.length > 100) ||
+      participants[0].email.length > 254 || !emailPattern.test(participants[0].email)) {
+    return badRequest('Isi nama tim, nama ketiga peserta, dan email ketua yang valid.');
   }
   const proof = env.readProof ? await env.readProof(id) : data.get('proof');
   if ((!env.readProof && data.getAll('proof').length !== 1) || !(proof instanceof File) || !proof.size || proof.size > limit) {
@@ -116,7 +119,7 @@ export async function admin(request, env, url) {
     const rows = results.slice(0, 50).map(row => {
       const id = encodeURIComponent(row.id);
       const participants = JSON.parse(row.participants).map(({name, email}) =>
-        '<li>' + escapeHtml(name) + ' · ' + escapeHtml(email) + '</li>').join('');
+        '<li>' + escapeHtml(name) + (email ? ' · ' + escapeHtml(email) : '') + '</li>').join('');
       const action = '<form method="post" action="/admin/status/' + id + '">';
       const documentLinks = env.notifyCaptain ? JSON.parse(row.documents || '[]').map(doc=>'<p><a href="/admin/document/'+id+'?kind='+doc.kind+'">Unduh '+(doc.kind==='identity'?'identitas tim':'bukti media sosial')+' PDF</a></p>').join('') : '';
       const controls = row.status === 'verified'
