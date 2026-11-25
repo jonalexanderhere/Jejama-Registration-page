@@ -1,4 +1,4 @@
-import {defaultGuidebookUrl,defaultTiers} from './event-defaults.mjs';
+import {defaultGuidebookUrl,defaultTiers,defaultTimeline} from './event-defaults.mjs';
 import {readEmailLinks} from './verification-email.mjs';
 const defaultPartners = [
   {id:'jogja', name:'Jogja Cyber Security', category:'media', asset:'/assets/jogja-cyber-security.webp'},
@@ -16,6 +16,7 @@ const fields = {
   tagline: 'Subjudul utama', intro: 'Deskripsi utama', challenge: 'Pengumuman tantangan',
   prize: 'Pengumuman hadiah', sponsor: 'Deskripsi sponsorship', guidebook: 'Pengumuman buku panduan',
   closing: 'Judul penutup',
+  ...Object.fromEntries(Object.keys(defaultTimeline).map(key=>[key,key])),
   stage1: 'Judul tahap 1', date1: 'Tanggal tahap 1',
   stage2: 'Judul tahap 2', date2: 'Tanggal tahap 2',
   stage3: 'Judul tahap 3', date3: 'Tanggal tahap 3',
@@ -29,7 +30,7 @@ const escape = value => value.replace(/[&<>"']/g, ch => ({
 
 async function readContent(db) {
   const row = await db.prepare('SELECT content FROM site_content WHERE id = ?').bind(1).first();
-  return {guidebookUrl:defaultGuidebookUrl,sponsorshipTiers:defaultTiers,...(row ? JSON.parse(row.content) : {})};
+  return {...defaultTimeline,guidebookUrl:defaultGuidebookUrl,sponsorshipTiers:defaultTiers,...(row ? JSON.parse(row.content) : {})};
 }
 
 export async function siteContent(request, env, url) {
@@ -91,7 +92,7 @@ export async function siteContent(request, env, url) {
       if (!['https://drive.google.com','https://docs.google.com'].includes(drive.origin) || drive.username || drive.password || link.length > 1000) return new Response('Enter a valid Tautan Google Drive.',{status:400,headers});
       content.guidebookUrl = drive.href;
     }
-    for (let stage=1; stage<=4; stage++) {
+    for (let stage=1; stage<=8; stage++) {
       const key='scheduled'+stage;
       const value=String(body.get(key)||'');
       if (!value) continue;
@@ -125,9 +126,9 @@ export async function siteContent(request, env, url) {
   const content = await readContent(env.DB);
   const emailLinks = await readEmailLinks(env.DB);
   const control = (key,label) => '<label>'+label+'<textarea maxlength="1000" name="'+key+'">'+escape(content[key]||'')+'</textarea></label>';
-  const controls = Object.entries(fields).filter(([key])=>! /^(stage|date)/.test(key)).map(([key,label])=>control(key,label)).join('');
+  const controls = Object.entries(fields).filter(([key])=>! /^(stage|date|venue)/.test(key)).map(([key,label])=>control(key,label)).join('');
   const tiers = (content.sponsorshipTiers || defaultTiers).map((tier,i)=>'<fieldset><legend>'+tier.name+' · '+tier.position+'</legend><label>Kontribusi mulai dari (Rp)<input name="tierAmount'+i+'" required pattern="[0-9.]+" maxlength="16" value="'+escape(tier.amount)+'"></label><label>Manfaat<textarea name="tierBenefit'+i+'" maxlength="1000">'+escape(tier.benefit)+'</textarea></label></fieldset>').join('');
-  const dates = [1,2,3,4].map(i=>'<fieldset><legend>Tahap '+i+'</legend>'+control('stage'+i,'Judul')+control('date'+i,'Keterangan tanggal')+
+  const dates = [1,2,3,4,5,6,7,8].map(i=>'<fieldset><legend>Tahap '+i+'</legend>'+control('stage'+i,'Judul')+control('date'+i,'Tanggal atau rentang tanggal')+control('venue'+i,'Tempat')+
     '<label>Tanggal kegiatan<input type="date" name="scheduled'+i+'" value="'+escape(content['scheduled'+i]||'')+'"></label></fieldset>').join('');
   const sponsors = partners(content).map(logo => '<fieldset><legend>'+escape(logo.name)+'</legend><img width="110" height="70" src="'+logoUrl(logo)+'" alt=""><label>Kategori<select name="category-'+logo.id+'">'+categoryOptions(logo.category)+'</select></label><label><span><input type="checkbox" name="removeSponsor" value="'+logo.id+'"> Hapus saat diterbitkan</span></label></fieldset>').join('');
   return new Response('<!doctype html><html lang="id"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Jejama CTF | Site Content</title><link rel="stylesheet" href="/admin-theme.css">'+

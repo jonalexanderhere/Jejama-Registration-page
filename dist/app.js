@@ -74,7 +74,7 @@ if (globalThis.uploadJejamaProof) {
         const value = content[node.dataset.content];
         if (typeof value === 'string') node.textContent = value;
       }
-      for (let stage = 1; stage <= 4; stage++) {
+      for (let stage = 1; stage <= 8; stage++) {
         const date = content['scheduled' + stage];
         if (!date) continue;
         const time = document.createElement('time');
