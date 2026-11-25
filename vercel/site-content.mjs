@@ -1,7 +1,7 @@
 import {defaultGuidebookUrl,defaultTiers,defaultTimeline} from './event-defaults.mjs';
 import {readEmailLinks} from './verification-email.mjs';
 const defaultPartners = [
-  {id:'jogja', name:'Jogja Cyber Security', category:'media', asset:'/assets/jogja-cyber-security.webp'},
+  {id:'jogja', name:'Jogja Cyber Security', category:'sponsor', tier:'Bronze', asset:'/assets/jogja-cyber-security.webp'},
   {id:'csrelated', name:'CSRelated Competitions', category:'media', asset:'/assets/csrelated-competitions.webp'},
 ];
 const partners = content => content.partners ?? [
@@ -10,6 +10,7 @@ const partners = content => content.partners ?? [
 ];
 const categoryOptions = category => ['sponsor','media'].map(value =>
   '<option value="'+value+'"'+(value===category?' selected':'')+'>'+ (value==='media'?'Mitra Media':'Sponsor')+'</option>').join('');
+const tierOptions = tier => ['', 'Gold', 'Silver', 'Bronze'].map(value=>'<option value="'+value+'"'+(value===tier?' selected':'')+'>'+(value||'Tanpa tier')+'</option>').join('');
 const logoUrl = logo => logo.asset || '/api/sponsor-logo/'+logo.id;
 
 const fields = {
@@ -72,7 +73,7 @@ export async function siteContent(request, env, url) {
     const oldSponsors = partners(previous);
     const category = key => body.get(key) === 'media' ? 'media' : 'sponsor';
     const sponsors = oldSponsors.filter(sponsor => !body.getAll('removeSponsor').includes(sponsor.id))
-      .map(sponsor => ({...sponsor, category:body.has('category-'+sponsor.id) ? category('category-'+sponsor.id) : sponsor.category}));
+      .map(sponsor => ({...sponsor, category:body.has('category-'+sponsor.id) ? category('category-'+sponsor.id) : sponsor.category, tier:body.has('tier-'+sponsor.id) ? (['Gold','Silver','Bronze'].includes(body.get('tier-'+sponsor.id)) ? body.get('tier-'+sponsor.id) : '') : sponsor.tier}));
     for (const key of Object.keys(fields)) {
       const value = body.get(key);
       if (typeof value !== 'string' || value.length > 1000) return new Response('Konten tidak valid.', {status:400,headers});
@@ -130,7 +131,7 @@ export async function siteContent(request, env, url) {
   const tiers = (content.sponsorshipTiers || defaultTiers).map((tier,i)=>'<fieldset><legend>'+tier.name+' · '+tier.position+'</legend><label>Kontribusi mulai dari (Rp)<input name="tierAmount'+i+'" required pattern="[0-9.]+" maxlength="16" value="'+escape(tier.amount)+'"></label><label>Manfaat<textarea name="tierBenefit'+i+'" maxlength="1000">'+escape(tier.benefit)+'</textarea></label></fieldset>').join('');
   const dates = [1,2,3,4,5,6,7,8].map(i=>'<fieldset><legend>Tahap '+i+'</legend>'+control('stage'+i,'Judul')+control('date'+i,'Tanggal atau rentang tanggal')+control('venue'+i,'Tempat')+
     '<label>Tanggal kegiatan<input type="date" name="scheduled'+i+'" value="'+escape(content['scheduled'+i]||'')+'"></label></fieldset>').join('');
-  const sponsors = partners(content).map(logo => '<fieldset><legend>'+escape(logo.name)+'</legend><img width="110" height="70" src="'+logoUrl(logo)+'" alt=""><label>Kategori<select name="category-'+logo.id+'">'+categoryOptions(logo.category)+'</select></label><label><span><input type="checkbox" name="removeSponsor" value="'+logo.id+'"> Hapus saat diterbitkan</span></label></fieldset>').join('');
+  const sponsors = partners(content).map(logo => '<fieldset><legend>'+escape(logo.name)+'</legend><img width="110" height="70" src="'+logoUrl(logo)+'" alt=""><label>Kategori<select name="category-'+logo.id+'">'+categoryOptions(logo.category)+'</select></label><label>Tier sponsor<select name="tier-'+logo.id+'">'+tierOptions(logo.tier)+'</select></label><label><span><input type="checkbox" name="removeSponsor" value="'+logo.id+'"> Hapus saat diterbitkan</span></label></fieldset>').join('');
   return new Response('<!doctype html><html lang="id"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Jejama CTF | Site Content</title><link rel="stylesheet" href="/admin-theme.css">'+
     '<main class="content-dashboard"><nav class="admin-nav" aria-label="Navigasi admin"><a class="admin-brand" href="/admin"><img src="/assets/logo.webp" width="36" height="36" alt=""> Jejama CTF</a><a href="/admin">Pendaftaran</a><a href="/admin/content" aria-current="page">Konten Situs</a><a class="view-site" href="/">Lihat situs ↗</a><form method="post" action="/admin/logout"><button>Keluar</button></form></nav>'+
     '<header class="workspace-heading"><h1>Konten Situs</h1><p>Kelola informasi kegiatan dan tautan email ketua tim.</p></header>'+

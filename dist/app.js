@@ -104,6 +104,12 @@ if (globalThis.uploadJejamaProof) {
           image.alt = sponsor.name;
           image.loading = 'lazy';
           card.append(image);
+          if (sponsor.category === 'sponsor' && ['Gold','Silver','Bronze'].includes(sponsor.tier)) {
+            const label = document.createElement('span');
+            label.className = 'partner-tier';
+            label.textContent = sponsor.tier + ' Sponsor';
+            card.append(label);
+          }
           logos.append(card);
         }
         sponsorLogos.hidden = !sponsorLogos.childElementCount;

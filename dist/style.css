@@ -193,3 +193,4 @@ footer .shell{display:flex;justify-content:space-between;align-items:center;gap:
 .timeline-venue{font-size:.8rem;line-height:1.5;color:#b9d7ec;font-weight:400;margin:.5rem 0 0;max-width:23ch}
 @media(min-width:760px){.timeline-map{min-height:29rem}.timeline li{min-height:29rem}.timeline li:nth-child(odd){padding-bottom:20rem}.timeline li:nth-child(even){padding-top:18rem}}
 @media(max-width:759px){.timeline-map+.timeline-map{margin-top:0}.timeline-map:first-of-type .timeline li:last-child{padding-bottom:1.4rem;border-left-color:#719fbe}}
+.partner-tier{display:block;color:#80502d;font-size:.8rem;font-weight:700;text-align:center;margin-top:.5rem}
