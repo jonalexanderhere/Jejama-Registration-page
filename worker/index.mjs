@@ -52,26 +52,26 @@ export async function register(request, env) {
   }));
   if (!uuid.test(id) || !team || team.length > 80 || participants.some(({name, email}) =>
     !name || name.length > 100 || email.length > 254 || !emailPattern.test(email))) {
-    return badRequest('Enter a team name and valid names and emails for all three participants.');
+    return badRequest('Isi nama tim serta nama dan email yang valid untuk ketiga peserta.');
   }
   if (new Set(participants.map(({email}) => email)).size !== 3) {
-    return badRequest('Enter a different email address for each participant.');
+    return badRequest('Gunakan email yang berbeda untuk setiap peserta.');
   }
   const proof = env.readProof ? await env.readProof(id) : data.get('proof');
   if ((!env.readProof && data.getAll('proof').length !== 1) || !(proof instanceof File) || !proof.size || proof.size > limit) {
-    return badRequest('Attach one JPEG, PNG, or PDF file up to 5 MB.');
+    return badRequest('Unggah satu JPEG, PNG, atau PDF maksimal 5 MB.');
   }
   const bytes = new Uint8Array(await proof.arrayBuffer());
   const type = proofType(bytes);
-  if (!type || proof.type !== type) return badRequest('Payment proof must be a JPEG, PNG, or PDF.');
+  if (!type || proof.type !== type) return badRequest('Bukti transfer harus berupa JPEG, PNG, atau PDF.');
 
   const documents = [];
   if (env.readProof) {
     for (const kind of ['identity','social']) {
       const file = await env.readProof(id,kind);
-      if (!(file instanceof File) || !file.size || file.size>limit || file.type!=='application/pdf') return badRequest('Attach identity and social evidence PDFs up to 5 MB.');
+      if (!(file instanceof File) || !file.size || file.size>limit || file.type!=='application/pdf') return badRequest('Unggah PDF identitas dan bukti media sosial maksimal 5 MB.');
       const bytes = new Uint8Array(await file.arrayBuffer());
-      if (proofType(bytes)!=='application/pdf') return badRequest('Identity and social evidence must be PDFs.');
+      if (proofType(bytes)!=='application/pdf') return badRequest('Identitas dan bukti media sosial harus berupa PDF.');
       documents.push({kind,bytes});
     }
   }
@@ -109,7 +109,7 @@ export async function admin(request, env, url) {
   if (!env.authorizeAdmin && !user && request.method === 'GET' && url.pathname === '/admin') {
     return new Response(null, {status: 302, headers: {...privateHeaders, Location: '/signin-with-chatgpt?returnTo=%2Fadmin'}});
   }
-  if (!env.authorizeAdmin && (!user || !allowed.includes(email))) return badRequest('Organizer access required.', 403);
+  if (!env.authorizeAdmin && (!user || !allowed.includes(email))) return badRequest('Akses panitia diperlukan.', 403);
 
   if (url.pathname === '/admin' && request.method === 'GET') {
     const emailColumn = env.notifyCaptain ? ', verification_email_id, documents' : '';
@@ -121,22 +121,22 @@ export async function admin(request, env, url) {
       const participants = JSON.parse(row.participants).map(({name, email}) =>
         '<li>' + escapeHtml(name) + ' · ' + escapeHtml(email) + '</li>').join('');
       const action = '<form method="post" action="/admin/status/' + id + '">';
-      const documentLinks = env.notifyCaptain ? JSON.parse(row.documents || '[]').map(doc=>'<p><a href="/admin/document/'+id+'?kind='+doc.kind+'">Download '+doc.kind+' PDF</a></p>').join('') : '';
+      const documentLinks = env.notifyCaptain ? JSON.parse(row.documents || '[]').map(doc=>'<p><a href="/admin/document/'+id+'?kind='+doc.kind+'">Unduh '+(doc.kind==='identity'?'identitas tim':'bukti media sosial')+' PDF</a></p>').join('') : '';
       const controls = row.status === 'verified'
-        ? (env.notifyCaptain && !row.verification_email_id ? action + '<button name="status" value="retry-email">Retry captain email</button></form>' : '') +
-          (url.searchParams.get('proofCleanup') === row.id ? action + '<button name="status" value="retry-cleanup">Retry proof deletion</button></form>' : '')
-        : documentLinks + '<p><a href="/admin/proof/' + id + '">Download payment proof</a></p>' + action +
-          '<button name="status" value="verified">Mark Verified</button> <button class="danger" name="status" value="rejected">Mark Rejected</button></form>';
-      return '<article class="team-card"><header><h2>' + escapeHtml(row.team) + '</h2><span class="status status-' + escapeHtml(row.status) + '">' + escapeHtml(row.status) + '</span></header><p class="team-meta">' + escapeHtml(row.id) + ' · ' + escapeHtml(row.created_at) +
+        ? (env.notifyCaptain && !row.verification_email_id ? action + '<button name="status" value="retry-email">Kirim Ulang Email Ketua</button></form>' : '') +
+          (url.searchParams.get('proofCleanup') === row.id ? action + '<button name="status" value="retry-cleanup">Ulangi Penghapusan Bukti</button></form>' : '')
+        : documentLinks + '<p><a href="/admin/proof/' + id + '">Unduh bukti transfer</a></p>' + action +
+          '<button name="status" value="verified">Verifikasi Tim</button> <button class="danger" name="status" value="rejected">Tolak Tim</button></form>';
+      return '<article class="team-card"><header><h2>' + escapeHtml(row.team) + '</h2><span class="status status-' + escapeHtml(row.status) + '">' + ({'pending':'Menunggu pemeriksaan','verified':'Terverifikasi','rejected':'Ditolak'}[row.status] || escapeHtml(row.status)) + '</span></header><p class="team-meta">' + escapeHtml(row.id) + ' · ' + escapeHtml(row.created_at) +
         ' UTC</p><ol>' + participants + '</ol>' + controls + '</article>';
     }).join('');
-    const editorLink = env.authorizeAdmin ? '<a href="/admin" aria-current="page">Registrations</a><a href="/admin/content">Website Content</a><a class="view-site" href="/">View website ↗</a><form method="post" action="/admin/logout"><button>Sign out</button></form>' : '';
-    return new Response('<!doctype html><html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Jejama CTF | Organizer Panel</title>' +
+    const editorLink = env.authorizeAdmin ? '<a href="/admin" aria-current="page">Pendaftaran</a><a href="/admin/content">Konten Situs</a><a class="view-site" href="/">Lihat situs ↗</a><form method="post" action="/admin/logout"><button>Keluar</button></form>' : '';
+    return new Response('<!doctype html><html lang="id"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Jejama CTF | Organizer Panel</title>' +
       (env.authorizeAdmin ? '' : '<style>body{font:1rem/1.5 system-ui;margin:2rem auto;padding:0 1rem;max-width:55rem;color:#0a2e46}article{border-top:1px solid #9db4c3;padding:1rem 0;overflow-wrap:anywhere}button{padding:.4rem .65rem}nav{display:flex;gap:1rem}</style>') +
       (env.authorizeAdmin ? '<link rel="stylesheet" href="/admin-theme.css">' : '') +
-      '<main><nav class="admin-nav" aria-label="Admin navigation"><a class="admin-brand" href="/"><img src="/assets/logo.webp" width="36" height="36" alt=""> Jejama CTF</a>' + editorLink + '</nav><header class="page-heading"><h1>Team Registrations</h1><p class="muted">Review participant details and payment proofs.</p></header>' + (url.searchParams.get('email') === 'failed' ? '<p role="alert">Team verified. Email could not be confirmed. Check email settings and select Retry captain email.</p>' : url.searchParams.get('email') === 'accepted' ? '<p class="notice" role="status">Team verified. Captain email accepted for sending.</p>' : '') + (url.searchParams.has('proofCleanup') ? '<p role="alert">Payment proof deletion could not be confirmed. Select Retry proof deletion on the team card.</p>' : '') + (rows || '<p>No registrations on this page.</p>') + '<nav>' +
-      (page ? '<a href="/admin?page=' + (page - 1) + '">Previous</a>' : '') +
-      (results.length > 50 ? '<a href="/admin?page=' + (page + 1) + '">Next</a>' : '') + '</nav></main></html>',
+      '<main><nav class="admin-nav" aria-label="Navigasi admin"><a class="admin-brand" href="/"><img src="/assets/logo.webp" width="36" height="36" alt=""> Jejama CTF</a>' + editorLink + '</nav><header class="page-heading"><h1>Pendaftaran Tim</h1><p class="muted">Periksa data peserta dan bukti transfer.</p></header>' + (url.searchParams.get('email') === 'failed' ? '<p role="alert">Tim terverifikasi. Email belum dapat dikonfirmasi. Periksa pengaturan email lalu pilih Kirim Ulang Email Ketua.</p>' : url.searchParams.get('email') === 'accepted' ? '<p class="notice" role="status">Tim terverifikasi. Email ketua telah diterima untuk dikirim.</p>' : '') + (url.searchParams.has('proofCleanup') ? '<p role="alert">Penghapusan bukti belum dapat dikonfirmasi. Pilih Ulangi Penghapusan Bukti pada kartu tim.</p>' : '') + (rows || '<p>Belum ada pendaftaran di halaman ini.</p>') + '<nav>' +
+      (page ? '<a href="/admin?page=' + (page - 1) + '">Sebelumnya</a>' : '') +
+      (results.length > 50 ? '<a href="/admin?page=' + (page + 1) + '">Berikutnya</a>' : '') + '</nav></main></html>',
     {headers: {...privateHeaders, 'Content-Type': 'text/html; charset=utf-8', 'Content-Security-Policy': "default-src 'none'; style-src 'self' 'unsafe-inline'; img-src 'self'; form-action 'self'; frame-ancestors 'none'; base-uri 'none'"}});
   }
 
@@ -164,14 +164,14 @@ export async function admin(request, env, url) {
     if (!['verified', 'rejected', 'retry-email', 'retry-cleanup'].includes(status)) return badRequest('Invalid action.');
     if (status === 'rejected') {
       const result = await env.DB.prepare('UPDATE team_registrations SET status = ? WHERE id = ? AND status <> ?').bind(status,id,'verified').run();
-      if (!result.meta.changes) return badRequest('Registration unavailable for rejection.', 409);
+      if (!result.meta.changes) return badRequest('Pendaftaran tidak dapat ditolak.', 409);
       return new Response(null,{status:303,headers:{...privateHeaders,Location:'/admin'}});
     }
     if (status === 'verified') {
       await env.DB.prepare('UPDATE team_registrations SET status = ? WHERE id = ? AND status <> ?').bind('verified',id,'verified').run();
     }
     const row = await env.DB.prepare('SELECT proof_key' + (env.notifyCaptain ? ', documents' : '') + ' FROM team_registrations WHERE id = ? AND status = ?').bind(id,'verified').first();
-    if (!row) return badRequest('Verified registration not found.',404);
+    if (!row) return badRequest('Pendaftaran terverifikasi tidak ditemukan.',404);
 
     const query = new URLSearchParams();
     try {
@@ -211,7 +211,7 @@ export default {
       });
     } catch (error) {
       console.error('Jejama request failed:', error.name);
-      return badRequest('The service is temporarily unavailable. Please try again.', 503);
+      return badRequest('Layanan sedang tidak tersedia. Silakan coba lagi.', 503);
     }
   },
 };

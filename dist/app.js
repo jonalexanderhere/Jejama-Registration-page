@@ -21,25 +21,25 @@ form.addEventListener('submit', async (event) => {
   const data = new FormData(form);
   const emails = ['captainEmail', 'member2Email', 'member3Email'].map(name => data.get(name).trim().toLowerCase());
   if (new Set(emails).size !== 3) {
-    feedback.textContent = 'Enter a different email address for each participant.';
+    feedback.textContent = 'Gunakan alamat email yang berbeda untuk setiap peserta.';
     return;
   }
   const proof = data.get('proof');
   if (!proof.size || proof.size > maxProofSize || !['image/jpeg', 'image/png', 'application/pdf'].includes(proof.type)) {
-    feedback.textContent = 'Attach one JPEG, PNG, or PDF file up to 5 MB.';
+    feedback.textContent = 'Unggah satu JPEG, PNG, atau PDF maksimal 5 MB.';
     return;
   }
   for (const kind of ['identity','social']) {
     const file = data.get(kind);
     if (!file?.size || file.size > maxProofSize || file.type !== 'application/pdf') {
-      feedback.textContent = 'Attach identity and social evidence PDFs, each up to 5 MB.';
+      feedback.textContent = 'Unggah PDF identitas dan bukti media sosial, masing-masing maksimal 5 MB.';
       return;
     }
   }
   const submissionId = retryId ??= crypto.randomUUID();
   data.set('submissionId', submissionId);
   submit.disabled = true;
-  feedback.textContent = 'Submitting registration…';
+  feedback.textContent = 'Mengirim pendaftaran…';
   try {
     if (globalThis.uploadJejamaProof) {
       await globalThis.uploadJejamaProof(proof, submissionId);
@@ -52,14 +52,14 @@ form.addEventListener('submit', async (event) => {
     const response = await fetch(form.action, {method: 'POST', body: data});
     const result = await response.json();
     if (response.ok) {
-      feedback.textContent = 'Registration code: ' + result.id + '\nPayment proof received · Pending review';
+      feedback.textContent = 'Kode pendaftaran: ' + result.id + '\nBukti transfer received · Pending review';
       form.reset();
       retryId = undefined;
     } else {
-      feedback.textContent = result.error || 'Registration could not be completed. Please try again.';
+      feedback.textContent = result.error || 'Pendaftaran belum berhasil. Silakan coba lagi.';
     }
   } catch {
-    feedback.textContent = 'We couldn’t confirm your registration. Please try again.';
+    feedback.textContent = 'Pendaftaran belum dapat dikonfirmasi. Silakan coba lagi.';
   } finally {
     submit.disabled = false;
   }
@@ -79,7 +79,7 @@ if (globalThis.uploadJejamaProof) {
         if (!date) continue;
         const time = document.createElement('time');
         time.dateTime = date;
-        time.textContent = new Intl.DateTimeFormat('en-GB', {
+        time.textContent = new Intl.DateTimeFormat('id-ID', {
           dateStyle: 'medium', timeZone: 'UTC',
         }).format(new Date(date));
         document.querySelector('[data-content="date' + stage + '"]').replaceChildren(time);

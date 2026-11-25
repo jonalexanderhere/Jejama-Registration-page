@@ -93,7 +93,7 @@ export default {
       return new Response('Not found', {status: 404});
     } catch (error) {
       console.error('Jejama request failed:', error.name);
-      return Response.json({error: 'Service unavailable. Please try again.'}, {status: 503});
+      return Response.json({error: 'Layanan tidak tersedia. Silakan coba lagi.'}, {status: 503});
     }
   },
 };
