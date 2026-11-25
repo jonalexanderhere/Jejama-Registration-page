@@ -81,7 +81,7 @@
 </section>
 <section class="partner-showcase section" id="sponsor" aria-labelledby="sponsor-heading">
 <div class="shell centered">
-<h2 id="sponsor-heading">Our Sponsors</h2>
+<p class="sponsorship-label">Bersama mendukung talenta keamanan siber</p><h2 id="sponsor-heading">Our Sponsors</h2>
 <p data-content="sponsor">Dukung perkembangan komunitas keamanan siber di Lampung.</p>
 <p id="sponsor-placeholder" hidden>Informasi sponsor akan segera diumumkan.</p>
 <div id="sponsor-logos" class="sponsor-tiers">
@@ -100,27 +100,19 @@
 </div>
 </section>
 <section class="shell guide paper" id="guidebook"><img src="assets/guidebook.webp" alt="" width="225" height="159"><div><h2>Guidebook</h2><p class="availability" data-content="guidebook">Pelajari panduan dan ketentuan Jejama CTF.</p><a id="guidebook-drive" href="https://docs.google.com/document/d/1AGX555MUWmWR57uevwzNWoHGUJepQYHMi4rqwzKy9Pc/edit?usp=sharing" class="button secondary" target="_blank" rel="noopener noreferrer">Open Guidebook ↗</a></div></section>
-<div class="shell section centered closing" id="pendaftaran"><h2 data-content="closing">Ready to Set Sail?</h2><p>Bentuk tim berisi 3 orang. Siapkan identitas, bukti media sosial, dan bukti transfer Rp50.000 per tim.</p><button type="button" class="button register-trigger" aria-haspopup="dialog"><svg class="sailing-icon" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.65" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12H5L12 3Zm3 4 4 8h-4M3 18h18l-3 4H6l-3-4Z"/></svg> Register Now</button></div>
+<div class="shell section centered closing" id="pendaftaran"><h2 data-content="closing">Ready to Set Sail?</h2><p>Bentuk tim berisi 3 orang. Ketua tim menyiapkan identitas, bukti media sosial, dan bukti transfer Rp50.000 per tim.</p><button type="button" class="button register-trigger" aria-haspopup="dialog"><svg class="sailing-icon" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.65" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12H5L12 3Zm3 4 4 8h-4M3 18h18l-3 4H6l-3-4Z"/></svg> Register Now</button></div>
 </main>
 <dialog id="registration-dialog" aria-labelledby="registration-title" aria-describedby="registration-description">
 <div class="dialog-heading"><h2 id="registration-title">Pendaftaran Tim</h2><button type="button" id="close-registration" autofocus>Tutup</button></div>
 <form id="registration" action="/api/registrations" method="post" enctype="multipart/form-data">
-<p id="registration-description">Isi data 3 peserta, unggah dokumen, lalu kirim pendaftaran. Semua kolom wajib diisi.</p>
+<p id="registration-description">Ketua tim mewakili pendaftaran tim berisi 3 orang. Isi data ketua, unggah dokumen, lalu kirim pendaftaran.</p>
 <div class="registration-team"><label>Nama tim<input name="team" required maxlength="80" placeholder="Contoh: Kru Siger"></label></div>
 <fieldset><legend>Ketua Tim</legend><div class="participant-fields">
 <label>Nama lengkap<input name="captainName" required maxlength="100"></label>
 <label>Alamat email<input name="captainEmail" type="email" required maxlength="254"></label>
 </div></fieldset>
-<fieldset><legend>Anggota 2</legend><div class="participant-fields">
-<label>Nama lengkap<input name="member2Name" required maxlength="100"></label>
-<label>Alamat email<input name="member2Email" type="email" required maxlength="254"></label>
-</div></fieldset>
-<fieldset><legend>Anggota 3</legend><div class="participant-fields">
-<label>Nama lengkap<input name="member3Name" required maxlength="100"></label>
-<label>Alamat email<input name="member3Email" type="email" required maxlength="254"></label>
-</div></fieldset>
-<fieldset><legend>Dokumen identitas</legend><p>Setiap anggota cukup melampirkan salah satu dokumen identitas: KTP, KTM, atau kartu pelajar. Gabungkan dokumen yang dipilih dari ketiga anggota menjadi satu PDF.</p><label>PDF identitas tim<input name="identity" type="file" accept="application/pdf" required></label></fieldset>
-<fieldset><legend>Bukti Mengikuti Instagram dan Publikasi</legend><p>Ikuti <a href="https://www.instagram.com/lampungcysec/" target="_blank" rel="noopener noreferrer">@lampungcysec</a>. Tangkapan layar wajib menampilkan nama pengguna dan status telah mengikuti akun tersebut untuk setiap peserta.</p><p>Bagikan ulang publikasi resmi pendaftaran Jejama CTF melalui Instagram Story. Cantumkan tag @lampungcysec dan minimal tiga akun teman. Gabungkan tangkapan layar bukti mengikuti dan publikasi menjadi satu PDF.</p><label>PDF bukti media sosial<input name="social" type="file" accept="application/pdf" required></label><p>Ukuran setiap berkas maksimal 5 MB.</p></fieldset>
+<fieldset><legend>Dokumen identitas</legend><p>Ketua tim cukup melampirkan salah satu dokumen identitas: KTP, KTM, atau kartu pelajar dalam format PDF.</p><label>PDF identitas ketua tim<input name="identity" type="file" accept="application/pdf" required></label></fieldset>
+<fieldset><legend>Bukti Mengikuti Instagram dan Publikasi</legend><p>Ikuti <a href="https://www.instagram.com/lampungcysec/" target="_blank" rel="noopener noreferrer">@lampungcysec</a>. Tangkapan layar wajib menampilkan nama pengguna dan status telah mengikuti akun tersebut milik ketua tim.</p><p>Bagikan ulang publikasi resmi pendaftaran Jejama CTF melalui Instagram Story. Cantumkan tag @lampungcysec dan minimal tiga akun teman. Gabungkan tangkapan layar bukti mengikuti dan publikasi menjadi satu PDF.</p><label>PDF bukti media sosial<input name="social" type="file" accept="application/pdf" required></label><p>Ukuran setiap berkas maksimal 5 MB.</p></fieldset>
 <fieldset><legend>Biaya Pendaftaran: Rp50.000 / Tim</legend><dl><dt>Bank</dt><dd>SEABANK</dd><dt>Nomor rekening</dt><dd>901238259082</dd><dt>Atas nama</dt><dd>Muhammad Salman Alfariz</dd></dl></fieldset>
 <fieldset><legend>Bukti pembayaran</legend><label>Bukti transfer<input name="proof" type="file" accept="image/jpeg,image/png,application/pdf,.jpg,.jpeg,.png,.pdf" required aria-describedby="proof-help"></label>
 <p id="proof-help" class="form-note">Transfer Rp50.000 ke rekening di atas, lalu unggah bukti transfer berupa JPEG, PNG, atau PDF maksimal 5 MB.</p></fieldset>

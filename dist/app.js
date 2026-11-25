@@ -19,11 +19,6 @@ form.addEventListener('input', () => { retryId = undefined; });
 form.addEventListener('submit', async (event) => {
   event.preventDefault();
   const data = new FormData(form);
-  const emails = ['captainEmail', 'member2Email', 'member3Email'].map(name => data.get(name).trim().toLowerCase());
-  if (new Set(emails).size !== 3) {
-    feedback.textContent = 'Gunakan alamat email yang berbeda untuk setiap peserta.';
-    return;
-  }
   const proof = data.get('proof');
   if (!proof.size || proof.size > maxProofSize || !['image/jpeg', 'image/png', 'application/pdf'].includes(proof.type)) {
     feedback.textContent = 'Unggah satu JPEG, PNG, atau PDF maksimal 5 MB.';
@@ -32,7 +27,7 @@ form.addEventListener('submit', async (event) => {
   for (const kind of ['identity','social']) {
     const file = data.get(kind);
     if (!file?.size || file.size > maxProofSize || file.type !== 'application/pdf') {
-      feedback.textContent = 'Unggah PDF identitas dan bukti media sosial, masing-masing maksimal 5 MB.';
+      feedback.textContent = 'Unggah PDF identitas ketua dan bukti media sosial, masing-masing maksimal 5 MB.';
       return;
     }
   }
@@ -119,6 +114,12 @@ if (globalThis.uploadJejamaProof) {
           image.alt = sponsor.name;
           image.loading = 'lazy';
           card.append(image);
+          if (sponsor.category === 'sponsor') {
+            const name = document.createElement('span');
+            name.className = 'sponsor-name';
+            name.textContent = sponsor.name;
+            card.append(name);
+          }
           logos.append(card);
         }
         sponsorLogos.hidden = !sponsorLogos.childElementCount;

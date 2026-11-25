@@ -234,3 +234,12 @@ footer .shell{display:flex;justify-content:space-between;align-items:center;gap:
 #registration .registration-submit button{width:100%;padding:.8rem}
 #registration-dialog #feedback{color:#153d63;padding:0 clamp(1rem,4vw,2rem) 1rem;overflow-wrap:anywhere}
 body:has(#registration-dialog[open]){overflow:hidden}
+
+#sponsor{background:radial-gradient(ellipse at 50% 35%,#1b4a72 0%,#0b2b53 65%);border-block:1px solid #6686a1}
+#sponsor .sponsor-tier-logos{gap:1.5rem}
+#sponsor .sponsor-tier-group .organization-logo{position:relative;flex-direction:column;gap:1.2rem;width:clamp(240px,32vw,340px);min-height:250px;padding:2rem;border:2px solid #cc9d74;border-radius:1rem;box-shadow:0 16px 38px #001c354d}
+#sponsor .sponsor-tier-group[data-tier=Gold] .organization-logo{border-color:#ecc36e}
+#sponsor .sponsor-tier-group[data-tier=Silver] .organization-logo{border-color:#b1c5d6}
+#sponsor .organization-logo img{max-height:155px}
+.sponsor-name{color:#173b5a;font-weight:700;font-size:1rem}
+@media(max-width:480px){#sponsor .sponsor-tier-group .organization-logo{width:min(100%,300px)}}

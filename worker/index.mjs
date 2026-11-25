@@ -47,15 +47,12 @@ export async function register(request, env) {
   };
   const id = field('submissionId').toLowerCase();
   const team = field('team');
-  const participants = ['captain', 'member2', 'member3'].map(role => ({
+  const participants = ['captain'].map(role => ({
     name: field(role + 'Name'), email: field(role + 'Email').toLowerCase(),
   }));
   if (!uuid.test(id) || !team || team.length > 80 || participants.some(({name, email}) =>
     !name || name.length > 100 || email.length > 254 || !emailPattern.test(email))) {
-    return badRequest('Isi nama tim serta nama dan email yang valid untuk ketiga peserta.');
-  }
-  if (new Set(participants.map(({email}) => email)).size !== 3) {
-    return badRequest('Gunakan email yang berbeda untuk setiap peserta.');
+    return badRequest('Isi nama tim, nama ketua, dan email ketua yang valid.');
   }
   const proof = env.readProof ? await env.readProof(id) : data.get('proof');
   if ((!env.readProof && data.getAll('proof').length !== 1) || !(proof instanceof File) || !proof.size || proof.size > limit) {
