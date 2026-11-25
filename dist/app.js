@@ -69,16 +69,7 @@ if (globalThis.uploadJejamaProof) {
         const value = content[node.dataset.content];
         if (typeof value === 'string') node.textContent = value;
       }
-      for (let stage = 1; stage <= 8; stage++) {
-        const date = content['scheduled' + stage];
-        if (!date) continue;
-        const time = document.createElement('time');
-        time.dateTime = date;
-        time.textContent = new Intl.DateTimeFormat('id-ID', {
-          dateStyle: 'medium', timeZone: 'UTC',
-        }).format(new Date(date));
-        document.querySelector('[data-content="date' + stage + '"]').replaceChildren(time);
-      }
+      globalThis.updateJejamaTimeline?.(content);
       if (content.guidebookUrl) {
         const link = document.querySelector('#guidebook-drive');
         link.href = content.guidebookUrl;

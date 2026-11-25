@@ -1,3 +1,4 @@
+import {setupTimeline} from './timeline.mjs';
 import {put} from '@vercel/blob/client';
 
 globalThis.uploadJejamaProof = async (proof, submissionId, kind = 'proof') => {
@@ -10,5 +11,6 @@ globalThis.uploadJejamaProof = async (proof, submissionId, kind = 'proof') => {
   const {token, pathname} = await response.json();
   await put(pathname, proof, {token, access: 'private', contentType: proof.type});
 };
+globalThis.updateJejamaTimeline = setupTimeline();
 void import('../dist/app.js');
 
