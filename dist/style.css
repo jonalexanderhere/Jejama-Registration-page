@@ -194,3 +194,22 @@ footer .shell{display:flex;justify-content:space-between;align-items:center;gap:
 @media(min-width:760px){.timeline-map{min-height:29rem}.timeline li{min-height:29rem}.timeline li:nth-child(odd){padding-bottom:20rem}.timeline li:nth-child(even){padding-top:18rem}}
 @media(max-width:759px){.timeline-map+.timeline-map{margin-top:0}.timeline-map:first-of-type .timeline li:last-child{padding-bottom:1.4rem;border-left-color:#719fbe}}
 .partner-tier{display:block;color:#80502d;font-size:.8rem;font-weight:700;text-align:center;margin-top:.5rem}
+
+.partner-showcase{border-top:1px solid #41617f;background:#0b2b53}
+.partner-showcase h2{font-size:clamp(2.3rem,5vw,4rem)}
+.partner-showcase>.shell>p{color:#c9dfef;max-width:55ch;margin:1rem auto 0}
+.sponsor-tiers{display:grid;gap:2.5rem;margin-top:2.5rem}
+.sponsor-tier-group h3{font-family:'DM Sans',system-ui,sans-serif;font-size:.9rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--gold);margin:0 0 1rem}
+.sponsor-tier-group[data-tier=Silver] h3{color:#dce7f1}
+.sponsor-tier-group[data-tier=Bronze] h3{color:#efbc91}
+.sponsor-tier-logos,.media-showcase .media-logos{display:flex;justify-content:center;align-items:stretch;flex-wrap:wrap;gap:1.25rem}
+.partner-showcase .organization-logo{display:flex;align-items:center;justify-content:center;background:#fff;padding:1.5rem;border:1px solid #c5d8e6;border-radius:.6rem;margin:0;width:200px;min-height:160px}
+.partner-showcase .organization-logo img{width:auto;height:auto;max-height:110px;max-width:100%}
+.sponsor-tier-group[data-tier=Gold] .organization-logo{width:280px;min-height:190px}
+.sponsor-tier-group[data-tier=Silver] .organization-logo{width:240px;min-height:175px}
+.sponsor-proposal-link{margin-top:2.25rem}
+.media-showcase{background:#092743}
+.media-showcase .media-logos{margin-top:2rem}
+.media-showcase .organization-logo{width:220px;min-height:120px}
+.media-showcase .organization-logo img{max-height:80px}
+@media(max-width:480px){.partner-showcase .organization-logo{width:min(100%,230px)}.media-showcase .organization-logo{width:min(100%,220px)}}

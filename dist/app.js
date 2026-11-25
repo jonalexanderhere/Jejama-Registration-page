@@ -95,8 +95,23 @@ if (globalThis.uploadJejamaProof) {
         const mediaLogos = document.querySelector('#media .media-logos');
         sponsorLogos.replaceChildren();
         mediaLogos.replaceChildren();
+        const groups = new Map();
+        for (const tier of ['Gold','Silver','Bronze','']) {
+          if (!content.partners.some(partner => partner.category !== 'media' && (partner.tier || '') === tier)) continue;
+          const group = document.createElement('div');
+          group.className = 'sponsor-tier-group';
+          group.dataset.tier = tier;
+          const title = document.createElement('h3');
+          title.textContent = tier ? tier + ' Sponsor' : 'Sponsor';
+          const logos = document.createElement('div');
+          logos.className = 'sponsor-tier-logos';
+          group.append(title,logos);
+          sponsorLogos.append(group);
+          groups.set(tier,logos);
+        }
         for (const sponsor of content.partners) {
-          const logos = sponsor.category === 'media' ? mediaLogos : sponsorLogos;
+          const logos = sponsor.category === 'media' ? mediaLogos : groups.get(sponsor.tier || '');
+          if (!logos) continue;
           const card = document.createElement('div');
           card.className = 'organization-logo';
           const image = document.createElement('img');
@@ -104,12 +119,6 @@ if (globalThis.uploadJejamaProof) {
           image.alt = sponsor.name;
           image.loading = 'lazy';
           card.append(image);
-          if (sponsor.category === 'sponsor' && ['Gold','Silver','Bronze'].includes(sponsor.tier)) {
-            const label = document.createElement('span');
-            label.className = 'partner-tier';
-            label.textContent = sponsor.tier + ' Sponsor';
-            card.append(label);
-          }
           logos.append(card);
         }
         sponsorLogos.hidden = !sponsorLogos.childElementCount;
