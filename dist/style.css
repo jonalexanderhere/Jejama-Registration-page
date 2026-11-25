@@ -213,3 +213,24 @@ footer .shell{display:flex;justify-content:space-between;align-items:center;gap:
 .media-showcase .organization-logo{width:220px;min-height:120px}
 .media-showcase .organization-logo img{max-height:80px}
 @media(max-width:480px){.partner-showcase .organization-logo{width:min(100%,230px)}.media-showcase .organization-logo{width:min(100%,220px)}}
+
+#registration-dialog{width:min(780px,calc(100% - 1.5rem));background:#f0f5fa;color:#18344e;padding:0;border:0;box-shadow:0 24px 80px #00152e80}
+#registration-dialog .dialog-heading{position:sticky;top:0;z-index:2;padding:1.15rem clamp(1rem,4vw,2rem);background:#0b2b53;color:var(--ivory);border-bottom:3px solid var(--gold)}
+#registration-dialog .dialog-heading h2{font-size:clamp(1.5rem,4vw,2rem)}
+#registration-dialog #close-registration{color:var(--ivory);border-color:#99b5cf;flex:none}
+#registration-dialog #registration{padding:1.4rem clamp(1rem,4vw,2rem);margin:0;gap:1.2rem}
+#registration-description{color:#496277;line-height:1.6}
+#registration .registration-team,#registration fieldset{background:white;border:1px solid #c4d5e3;border-radius:.7rem;padding:1rem}
+#registration legend{font-weight:750;color:#153d63;padding:0 .4rem;font-size:.95rem}
+#registration label{font-size:.9rem}
+#registration fieldset p{font-size:.88rem;line-height:1.65;color:#496277}
+#registration fieldset p+p{margin-top:.7rem}
+#registration input{border-color:#a6bfd2;color:#18344e;background:#fff;padding:.7rem}
+#registration input[type=file]{font-size:.82rem;background:#f3f7fb;padding:.5rem}
+#registration input::file-selector-button{border:0;border-radius:.35rem;padding:.55rem;background:#dceaf5;color:#153d63;font-weight:700;margin-right:.6rem}
+#registration a{color:#155286;text-decoration:underline}
+#registration .form-note{color:#496277}
+#registration .registration-submit{display:grid;gap:.7rem}
+#registration .registration-submit button{width:100%;padding:.8rem}
+#registration-dialog #feedback{color:#153d63;padding:0 clamp(1rem,4vw,2rem) 1rem;overflow-wrap:anywhere}
+body:has(#registration-dialog[open]){overflow:hidden}

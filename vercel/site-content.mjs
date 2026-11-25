@@ -1,6 +1,7 @@
 import {defaultGuidebookUrl,defaultTiers,defaultTimeline} from './event-defaults.mjs';
 import {readEmailLinks} from './verification-email.mjs';
 const defaultPartners = [
+  {id:'jogja-media', name:'Jogja Cyber Security', category:'media', asset:'/assets/jogja-cyber-security.webp'},
   {id:'jogja', name:'Jogja Cyber Security', category:'sponsor', tier:'Bronze', asset:'/assets/jogja-cyber-security.webp'},
   {id:'csrelated', name:'CSRelated Competitions', category:'media', asset:'/assets/csrelated-competitions.webp'},
 ];
