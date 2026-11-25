@@ -65,8 +65,18 @@ export async function register(request, env) {
   const type = proofType(bytes);
   if (!type || proof.type !== type) return badRequest('Payment proof must be a JPEG, PNG, or PDF.');
 
+  const documents = [];
+  if (env.readProof) {
+    for (const kind of ['identity','social']) {
+      const file = await env.readProof(id,kind);
+      if (!(file instanceof File) || !file.size || file.size>limit || file.type!=='application/pdf') return badRequest('Attach identity and social evidence PDFs up to 5 MB.');
+      const bytes = new Uint8Array(await file.arrayBuffer());
+      if (proofType(bytes)!=='application/pdf') return badRequest('Identity and social evidence must be PDFs.');
+      documents.push({kind,bytes});
+    }
+  }
   const roster = JSON.stringify(participants);
-  const fingerprint = await crypto.subtle.digest('SHA-256', await new Blob([JSON.stringify([team, roster]), bytes]).arrayBuffer());
+  const fingerprint = await crypto.subtle.digest('SHA-256', await new Blob([JSON.stringify([team, roster]), bytes,...documents.map(document=>document.bytes)]).arrayBuffer());
   const hash = Array.from(new Uint8Array(fingerprint), byte => byte.toString(16).padStart(2, '0')).join('');
   const key = id + '/' + hash;
   const lookup = env.DB.prepare('SELECT proof_key FROM team_registrations WHERE id = ?').bind(id);
@@ -74,8 +84,13 @@ export async function register(request, env) {
   if (existing) return existing.proof_key === key ? json({id}) : badRequest('This registration code belongs to a different submission.', 409);
 
   await env.BUCKET.put(key, bytes, {httpMetadata: {contentType: type}});
-  await env.DB.prepare('INSERT INTO team_registrations (id, team, participants, proof_key) VALUES (?, ?, ?, ?) ON CONFLICT(id) DO NOTHING')
-    .bind(id, team, roster, key).run();
+  for (const document of documents) await env.BUCKET.put(key+'/'+document.kind,document.bytes,{httpMetadata:{contentType:'application/pdf'}});
+  if (env.readProof) {
+    await env.DB.prepare('INSERT INTO team_registrations (id, team, participants, proof_key, documents) VALUES (?, ?, ?, ?, ?) ON CONFLICT(id) DO NOTHING')
+      .bind(id,team,roster,key,JSON.stringify(documents.map(({kind})=>({kind,key:key+'/'+kind})))).run();
+  } else {
+    await env.DB.prepare('INSERT INTO team_registrations (id, team, participants, proof_key) VALUES (?, ?, ?, ?) ON CONFLICT(id) DO NOTHING').bind(id,team,roster,key).run();
+  }
   const saved = await lookup.first();
   if (saved?.proof_key !== key) {
     await env.BUCKET.delete(key);
@@ -97,7 +112,7 @@ export async function admin(request, env, url) {
   if (!env.authorizeAdmin && (!user || !allowed.includes(email))) return badRequest('Organizer access required.', 403);
 
   if (url.pathname === '/admin' && request.method === 'GET') {
-    const emailColumn = env.notifyCaptain ? ', verification_email_id' : '';
+    const emailColumn = env.notifyCaptain ? ', verification_email_id, documents' : '';
     const {results} = await env.DB.prepare('SELECT id, team, participants, status, created_at' + emailColumn + ' FROM team_registrations ORDER BY created_at DESC, id DESC LIMIT 51 OFFSET ?')
       .bind(50 * Math.min(100000, Math.max(0, Math.trunc(Number(url.searchParams.get('page')) || 0)))).all();
     const page = Math.min(100000, Math.max(0, Math.trunc(Number(url.searchParams.get('page')) || 0)));
@@ -106,10 +121,11 @@ export async function admin(request, env, url) {
       const participants = JSON.parse(row.participants).map(({name, email}) =>
         '<li>' + escapeHtml(name) + ' · ' + escapeHtml(email) + '</li>').join('');
       const action = '<form method="post" action="/admin/status/' + id + '">';
+      const documentLinks = env.notifyCaptain ? JSON.parse(row.documents || '[]').map(doc=>'<p><a href="/admin/document/'+id+'?kind='+doc.kind+'">Download '+doc.kind+' PDF</a></p>').join('') : '';
       const controls = row.status === 'verified'
         ? (env.notifyCaptain && !row.verification_email_id ? action + '<button name="status" value="retry-email">Retry captain email</button></form>' : '') +
           (url.searchParams.get('proofCleanup') === row.id ? action + '<button name="status" value="retry-cleanup">Retry proof deletion</button></form>' : '')
-        : '<p><a href="/admin/proof/' + id + '">Download payment proof</a></p>' + action +
+        : documentLinks + '<p><a href="/admin/proof/' + id + '">Download payment proof</a></p>' + action +
           '<button name="status" value="verified">Mark Verified</button> <button class="danger" name="status" value="rejected">Mark Rejected</button></form>';
       return '<article class="team-card"><header><h2>' + escapeHtml(row.team) + '</h2><span class="status status-' + escapeHtml(row.status) + '">' + escapeHtml(row.status) + '</span></header><p class="team-meta">' + escapeHtml(row.id) + ' · ' + escapeHtml(row.created_at) +
         ' UTC</p><ol>' + participants + '</ol>' + controls + '</article>';
@@ -124,9 +140,16 @@ export async function admin(request, env, url) {
     {headers: {...privateHeaders, 'Content-Type': 'text/html; charset=utf-8', 'Content-Security-Policy': "default-src 'none'; style-src 'self' 'unsafe-inline'; img-src 'self'; form-action 'self'; frame-ancestors 'none'; base-uri 'none'"}});
   }
 
-  const route = /^\/admin\/(proof|status)\/([^/]+)$/.exec(url.pathname);
+  const route = /^\/admin\/(proof|status|document)\/([^/]+)$/.exec(url.pathname);
   if (!route || !uuid.test(route[2])) return badRequest('Not found.', 404);
   const [, action, id] = route;
+  if (action === 'document' && request.method === 'GET' && env.notifyCaptain) {
+    const row = await env.DB.prepare('SELECT documents FROM team_registrations WHERE id = ? AND status <> ?').bind(id,'verified').first();
+    const doc = JSON.parse(row?.documents || '[]').find(doc=>doc.kind===url.searchParams.get('kind'));
+    const file = doc && await env.BUCKET.get(doc.key);
+    if (!file) return badRequest('Document not found.',404);
+    return new Response(file.body,{headers:{...privateHeaders,'Content-Type':'application/pdf','Content-Disposition':'attachment; filename="'+doc.kind+'.pdf"'}});
+  }
   if (action === 'proof' && request.method === 'GET') {
     const row = await env.DB.prepare('SELECT proof_key FROM team_registrations WHERE id = ? AND status <> ?').bind(id,'verified').first();
     const proof = row && await env.BUCKET.get(row.proof_key);
@@ -147,12 +170,13 @@ export async function admin(request, env, url) {
     if (status === 'verified') {
       await env.DB.prepare('UPDATE team_registrations SET status = ? WHERE id = ? AND status <> ?').bind('verified',id,'verified').run();
     }
-    const row = await env.DB.prepare('SELECT proof_key FROM team_registrations WHERE id = ? AND status = ?').bind(id,'verified').first();
+    const row = await env.DB.prepare('SELECT proof_key' + (env.notifyCaptain ? ', documents' : '') + ' FROM team_registrations WHERE id = ? AND status = ?').bind(id,'verified').first();
     if (!row) return badRequest('Verified registration not found.',404);
 
     const query = new URLSearchParams();
     try {
       await env.BUCKET.delete(row.proof_key);
+      for (const doc of JSON.parse(row.documents || '[]')) await env.BUCKET.delete(doc.key);
       await env.deletePendingProof?.(id);
     } catch {
       query.set('proofCleanup',id);

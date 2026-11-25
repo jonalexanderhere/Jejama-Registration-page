@@ -29,6 +29,13 @@ form.addEventListener('submit', async (event) => {
     feedback.textContent = 'Attach one JPEG, PNG, or PDF file up to 5 MB.';
     return;
   }
+  for (const kind of ['identity','social']) {
+    const file = data.get(kind);
+    if (!file?.size || file.size > maxProofSize || file.type !== 'application/pdf') {
+      feedback.textContent = 'Attach identity and social evidence PDFs, each up to 5 MB.';
+      return;
+    }
+  }
   const submissionId = retryId ??= crypto.randomUUID();
   data.set('submissionId', submissionId);
   submit.disabled = true;
@@ -37,6 +44,10 @@ form.addEventListener('submit', async (event) => {
     if (globalThis.uploadJejamaProof) {
       await globalThis.uploadJejamaProof(proof, submissionId);
       data.delete('proof');
+      for (const kind of ['identity','social']) {
+        await globalThis.uploadJejamaProof(data.get(kind),submissionId,kind);
+        data.delete(kind);
+      }
     }
     const response = await fetch(form.action, {method: 'POST', body: data});
     const result = await response.json();

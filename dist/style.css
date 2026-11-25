@@ -153,3 +153,6 @@ footer .shell{display:flex;justify-content:space-between;align-items:center;gap:
  .timeline li:nth-child(even)::before{top:16.18rem}
 }
 #guidebook-drive[hidden],#sponsor-logos[hidden],#sponsor-placeholder[hidden]{display:none}
+
+#proposal-link[hidden]{display:none}
+#registration dl{display:grid;grid-template-columns:auto 1fr;gap:.4rem 1rem}#registration dd{margin:0;font-weight:700}

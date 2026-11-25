@@ -5,3 +5,6 @@ cpSync('vercel/admin-theme.css', 'public/admin-theme.css');
 cpSync('dist/style.css', 'public/style.css');
 cpSync('dist/assets', 'public/assets', {recursive: true});
 await build({entryPoints: ['vercel/client.mjs'], bundle: true, outfile: 'public/app.js', define: {'process.env.NODE_ENV': '"production"'}});
+
+cpSync('dist/sponsorship.html', 'public/sponsorship.html');
+cpSync('dist/sponsorship.js', 'public/sponsorship.js');

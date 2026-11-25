@@ -76,6 +76,13 @@ export async function siteContent(request, env, url) {
       if (typeof value !== 'string' || value.length > 1000) return new Response('Invalid content.', {status:400,headers});
       if (value.trim()) content[key] = value.trim();
     }
+    const proposal = String(body.get('proposalUrl') || '').trim();
+    if (proposal) {
+      let url;
+      try { url = new URL(proposal); } catch { return new Response('Enter a valid HTTPS proposal link.',{status:400,headers}); }
+      if (url.protocol!=='https:' || url.username || url.password || proposal.length>2000) return new Response('Enter a valid HTTPS proposal link.',{status:400,headers});
+      content.proposalUrl=url.href;
+    }
     const link = String(body.get('guidebookUrl') || '').trim();
     if (link) {
       let drive;
@@ -124,7 +131,7 @@ export async function siteContent(request, env, url) {
     '<section class="workspace-card" id="page-text"><h2>Page copy</h2><p class="muted">Leave a field empty to use the original site copy.</p><div class="editor-grid">'+controls+'</div></section>'+
     '<section class="workspace-card" id="event-timeline"><h2>Timeline</h2><p class="muted">Set a calendar date or use custom date text for each stage.</p><div class="editor-grid">'+dates+'</div></section>'+
     '<section class="workspace-card" id="event-guidebook"><h2>Guidebook</h2><label>Google Drive link<input type="url" name="guidebookUrl" value="'+escape(content.guidebookUrl||'')+'" placeholder="https://drive.google.com/…"></label></section>'+
-    '<section class="workspace-card" id="event-partnership"><h2>Partnership</h2><div class="editor-grid partner-grid">'+(sponsors||'<p class="muted">No partner logos yet.</p>')+'</div>'+
+    '<section class="workspace-card" id="event-partnership"><h2>Partnership</h2><label>Sponsorship proposal link<input type="url" name="proposalUrl" maxlength="2000" value="'+escape(content.proposalUrl||'')+'"></label><div class="editor-grid partner-grid">'+(sponsors||'<p class="muted">No partner logos yet.</p>')+'</div>'+
     '<fieldset><legend>Add partner</legend><div class="editor-grid"><label>Category<select name="sponsorCategory">'+categoryOptions('sponsor')+'</select></label><label>Partner name<input name="sponsorName" maxlength="100"></label></div><label>Logo <span class="muted">PNG, JPEG or WebP · up to 2 MB</span><input type="file" name="sponsorLogo" accept="image/png,image/jpeg,image/webp"></label></fieldset></section>'+
     '<div class="publish-bar"><button>Publish changes</button></div></form>'+
     '<section class="workspace-card" id="verification-email"><h2>Verification email</h2><p class="muted">These links are shared only with the team captain.</p>'+

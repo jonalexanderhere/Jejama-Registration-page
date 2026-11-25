@@ -3,6 +3,7 @@
   "outputDirectory": "public",
   "regions": ["sin1"],
   "rewrites": [
+    {"source": "/sponsorship", "destination": "/sponsorship.html"},
     {"source": "/api/registrations", "destination": "/api/jejama"},
     {"source": "/api/proof-token", "destination": "/api/jejama"},
     {"source": "/api/site-content", "destination": "/api/jejama"},

@@ -9,7 +9,7 @@ import {register, admin} from '../worker/index.mjs';
 const types = ['image/jpeg', 'image/png', 'application/pdf'];
 const limit = 5 * 1024 * 1024;
 const privateOptions = {access: 'private'};
-const pendingPath = id => 'pending/' + id;
+const pendingPath = (id,kind='proof') => 'pending/' + id + (kind==='proof'?'':'/'+kind);
 const savedPath = key => 'proofs/' + key;
 let schema;
 
@@ -20,7 +20,7 @@ function database() {
     proof_key TEXT NOT NULL, status TEXT NOT NULL DEFAULT 'pending'
     CHECK (status IN ('pending', 'verified', 'rejected')),
     created_at TIMESTAMP NOT NULL DEFAULT (now() AT TIME ZONE 'UTC')
-  )`), sql.query('CREATE TABLE IF NOT EXISTS site_content (id INTEGER PRIMARY KEY, content TEXT NOT NULL)')]).then(() => sql.query('ALTER TABLE team_registrations ADD COLUMN IF NOT EXISTS verification_email_id TEXT')).catch(error => { schema = undefined; throw error; });
+  )`), sql.query('CREATE TABLE IF NOT EXISTS site_content (id INTEGER PRIMARY KEY, content TEXT NOT NULL)')]).then(() => Promise.all([sql.query('ALTER TABLE team_registrations ADD COLUMN IF NOT EXISTS verification_email_id TEXT'),sql.query('ALTER TABLE team_registrations ADD COLUMN IF NOT EXISTS documents TEXT')])).catch(error => { schema = undefined; throw error; });
   return {
     prepare(query) {
       let index = 0;
@@ -43,9 +43,10 @@ export default {
     try {
       if (url.pathname === '/api/proof-token' && request.method === 'POST') {
         if (request.headers.get('origin') !== url.origin) return new Response(null, {status: 403});
-        const {submissionId, type} = await request.json();
+        const {submissionId, type, kind = 'proof'} = await request.json();
         if (!/^[a-f0-9]{8}-[a-f0-9]{4}-4[a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}$/.test(submissionId) || !types.includes(type)) return new Response(null, {status: 400});
-        const pathname = pendingPath(submissionId);
+        if (!['proof','identity','social'].includes(kind) || (kind!=='proof' && type!=='application/pdf')) return new Response(null,{status:400});
+        const pathname = pendingPath(submissionId,kind);
         const token = await generateClientTokenFromReadWriteToken({
           pathname, allowedContentTypes: [type], maximumSizeInBytes: limit,
           validUntil: Date.now() + 120000, allowOverwrite: true, addRandomSuffix: false,
@@ -60,15 +61,15 @@ export default {
       const env = {
         get DB() { return database(); },
         authorizeAdmin,
-        async deletePendingProof(id) { await del(pendingPath(id)); },
+        async deletePendingProof(id) { await Promise.all(['proof','identity','social'].map(kind=>del(pendingPath(id,kind)))); },
         notifyCaptain(id) { return notifyCaptain(database(),id); },
         async saveSponsor(path, data, type) {
           await put(path, data, {...privateOptions, contentType:type});
         },
         async getSponsor(path) { return get(path, privateOptions); },
         async deleteSponsor(path) { await del(path); },
-        async readProof(id) {
-          const file = await get(pendingPath(id), privateOptions);
+        async readProof(id,kind='proof') {
+          const file = await get(pendingPath(id,kind), privateOptions);
           if (!file?.stream || file.blob.size > limit) return null;
           const bytes = await new Response(file.stream).arrayBuffer();
           return new File([bytes], 'proof', {type: file.blob.contentType});
