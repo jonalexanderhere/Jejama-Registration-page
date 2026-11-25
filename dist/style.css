@@ -189,3 +189,4 @@ footer .shell{display:flex;justify-content:space-between;align-items:center;gap:
 .challenge-categories h3{font-size:clamp(1.15rem,2vw,1.5rem);line-height:1.35}
 @media(max-width:820px){.challenge-categories{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:480px){.challenge-categories{grid-template-columns:minmax(0,1fr)}}
+.sponsorship-packages{padding-bottom:3rem}.sponsorship-packages>p{max-width:80ch;color:#d6e6f2;line-height:1.7}.sponsorship-tier-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:1rem;margin-top:1.5rem}.tier-card{background:#123657}.tier-card h3{font-size:2rem}.tier-price strong{display:block;font-size:1.7rem;color:var(--gold)}.tier-card>p:last-child{color:#d6e6f2}@media(max-width:760px){.sponsorship-tier-grid{grid-template-columns:minmax(0,1fr)}}

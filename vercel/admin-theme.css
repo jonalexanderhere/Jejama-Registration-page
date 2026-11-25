@@ -49,3 +49,10 @@ img{max-width:100%;object-fit:contain}
 .partner-grid img{display:block;max-width:100%;object-fit:contain;background:#fff;border-radius:.45rem}
 .publish-bar{position:sticky;bottom:0;z-index:1;display:flex;justify-content:flex-end;background:#fff;border:1px solid var(--line);padding:.75rem;border-radius:.75rem;margin-bottom:1rem;box-shadow:0 -5px 16px #102e4c0a}
 @media(max-width:760px){.workspace-layout{grid-template-columns:minmax(0,1fr)}.workspace-menu{position:static}.workspace-menu nav{display:flex}.workspace-menu a{font-size:.9rem}.publish-bar{position:static}}
+#event-guidebook{background:linear-gradient(120deg,#fff,#eef5fb);border-top:3px solid #174e80}
+#event-partnership>.editor-grid:first-of-type{margin:1rem 0 1.5rem}
+#event-partnership>.editor-grid:first-of-type fieldset{border-top:3px solid #c59a3f}
+#event-partnership>.editor-grid:first-of-type fieldset:nth-child(2){border-top-color:#879bb0}
+#event-partnership>.editor-grid:first-of-type fieldset:nth-child(3){border-top-color:#ac7853}
+.workspace-menu a{border-left:3px solid transparent}
+.workspace-menu a:hover{border-left-color:#174e80}

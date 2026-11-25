@@ -1,3 +1,4 @@
+import {defaultGuidebookUrl,defaultTiers} from './event-defaults.mjs';
 import {readEmailLinks} from './verification-email.mjs';
 const defaultPartners = [
   {id:'jogja', name:'Jogja Cyber Security', category:'media', asset:'/assets/jogja-cyber-security.webp'},
@@ -28,7 +29,7 @@ const escape = value => value.replace(/[&<>"']/g, ch => ({
 
 async function readContent(db) {
   const row = await db.prepare('SELECT content FROM site_content WHERE id = ?').bind(1).first();
-  return row ? JSON.parse(row.content) : {};
+  return {guidebookUrl:defaultGuidebookUrl,sponsorshipTiers:defaultTiers,...(row ? JSON.parse(row.content) : {})};
 }
 
 export async function siteContent(request, env, url) {
@@ -87,7 +88,7 @@ export async function siteContent(request, env, url) {
     if (link) {
       let drive;
       try { drive = new URL(link); } catch { return new Response('Enter a valid Tautan Google Drive.',{status:400,headers}); }
-      if (drive.origin !== 'https://drive.google.com' || drive.username || drive.password || link.length > 1000) return new Response('Enter a valid Tautan Google Drive.',{status:400,headers});
+      if (!['https://drive.google.com','https://docs.google.com'].includes(drive.origin) || drive.username || drive.password || link.length > 1000) return new Response('Enter a valid Tautan Google Drive.',{status:400,headers});
       content.guidebookUrl = drive.href;
     }
     for (let stage=1; stage<=4; stage++) {
@@ -108,6 +109,12 @@ export async function siteContent(request, env, url) {
       await env.saveSponsor('sponsors/'+id,bytes,type);
       sponsors.push({id,name,category:category('sponsorKategori')});
     }
+    content.sponsorshipTiers = defaultTiers.map((tier,i)=>{
+      const amount=String(body.get('tierAmount'+i)||tier.amount).trim();
+      const benefit=String(body.get('tierBenefit'+i)||tier.benefit).trim();
+      if (!/^[0-9.]{1,16}$/.test(amount) || benefit.length>1000) throw new Error('Paket sponsorship tidak valid');
+      return {...tier,amount,benefit};
+    });
     content.partners=sponsors;
     await env.DB.prepare('INSERT INTO site_content (id, content) VALUES (?, ?) ON CONFLICT (id) DO UPDATE SET content = EXCLUDED.content')
       .bind(1, JSON.stringify(content)).run();
@@ -119,19 +126,20 @@ export async function siteContent(request, env, url) {
   const emailLinks = await readEmailLinks(env.DB);
   const control = (key,label) => '<label>'+label+'<textarea maxlength="1000" name="'+key+'">'+escape(content[key]||'')+'</textarea></label>';
   const controls = Object.entries(fields).filter(([key])=>! /^(stage|date)/.test(key)).map(([key,label])=>control(key,label)).join('');
+  const tiers = (content.sponsorshipTiers || defaultTiers).map((tier,i)=>'<fieldset><legend>'+tier.name+' · '+tier.position+'</legend><label>Kontribusi mulai dari (Rp)<input name="tierAmount'+i+'" required pattern="[0-9.]+" maxlength="16" value="'+escape(tier.amount)+'"></label><label>Manfaat<textarea name="tierBenefit'+i+'" maxlength="1000">'+escape(tier.benefit)+'</textarea></label></fieldset>').join('');
   const dates = [1,2,3,4].map(i=>'<fieldset><legend>Tahap '+i+'</legend>'+control('stage'+i,'Judul')+control('date'+i,'Keterangan tanggal')+
     '<label>Tanggal kegiatan<input type="date" name="scheduled'+i+'" value="'+escape(content['scheduled'+i]||'')+'"></label></fieldset>').join('');
   const sponsors = partners(content).map(logo => '<fieldset><legend>'+escape(logo.name)+'</legend><img width="110" height="70" src="'+logoUrl(logo)+'" alt=""><label>Kategori<select name="category-'+logo.id+'">'+categoryOptions(logo.category)+'</select></label><label><span><input type="checkbox" name="removeSponsor" value="'+logo.id+'"> Hapus saat diterbitkan</span></label></fieldset>').join('');
   return new Response('<!doctype html><html lang="id"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Jejama CTF | Site Content</title><link rel="stylesheet" href="/admin-theme.css">'+
     '<main class="content-dashboard"><nav class="admin-nav" aria-label="Navigasi admin"><a class="admin-brand" href="/admin"><img src="/assets/logo.webp" width="36" height="36" alt=""> Jejama CTF</a><a href="/admin">Pendaftaran</a><a href="/admin/content" aria-current="page">Konten Situs</a><a class="view-site" href="/">Lihat situs ↗</a><form method="post" action="/admin/logout"><button>Keluar</button></form></nav>'+
     '<header class="workspace-heading"><h1>Konten Situs</h1><p>Kelola informasi kegiatan dan tautan email ketua tim.</p></header>'+
-    '<div class="workspace-layout"><aside class="workspace-menu"><nav aria-label="Bagian konten"><a href="#page-text">Teks halaman</a><a href="#event-timeline">Jadwal</a><a href="#event-guidebook">Buku Panduan</a><a href="#event-partnership">Kemitraan</a><a href="#verification-email">Email verifikasi</a></nav></aside><div class="workspace-body">'+
+    '<div class="workspace-layout"><aside class="workspace-menu"><nav aria-label="Bagian konten"><a href="#page-text">Teks halaman</a><a href="#event-timeline">Jadwal</a><a href="#event-guidebook">Buku Panduan</a><a href="#event-partnership">Paket &amp; Mitra</a><a href="#verification-email">Email verifikasi</a></nav></aside><div class="workspace-body">'+
     (url.searchParams.has('saved')?'<p class="notice" role="status">Perubahan berhasil diterbitkan.</p>':'')+
     '<form method="post" enctype="multipart/form-data" class="content-form">'+
     '<section class="workspace-card" id="page-text"><h2>Teks halaman</h2><p class="muted">Kosongkan kolom untuk menggunakan teks bawaan situs.</p><div class="editor-grid">'+controls+'</div></section>'+
     '<section class="workspace-card" id="event-timeline"><h2>Jadwal</h2><p class="muted">Tentukan tanggal atau gunakan keterangan tanggal untuk setiap tahap.</p><div class="editor-grid">'+dates+'</div></section>'+
-    '<section class="workspace-card" id="event-guidebook"><h2>Buku Panduan</h2><label>Tautan Google Drive<input type="url" name="guidebookUrl" value="'+escape(content.guidebookUrl||'')+'" placeholder="https://drive.google.com/…"></label></section>'+
-    '<section class="workspace-card" id="event-partnership"><h2>Kemitraan</h2><label>Tautan proposal sponsorship<input type="url" name="proposalUrl" maxlength="2000" value="'+escape(content.proposalUrl||'')+'"></label><div class="editor-grid partner-grid">'+(sponsors||'<p class="muted">Belum ada logo mitra.</p>')+'</div>'+
+    '<section class="workspace-card" id="event-guidebook"><h2>Buku Panduan</h2><p class="muted">Panduan resmi peserta ditampilkan di situs dan email verifikasi.</p><label>Tautan Google Docs atau Drive<input type="url" name="guidebookUrl" value="'+escape(content.guidebookUrl||'')+'" placeholder="https://drive.google.com/…"></label></section>'+
+    '<section class="workspace-card" id="event-partnership"><h2>Kemitraan</h2><div class="editor-grid">'+tiers+'</div><label>Tautan proposal sponsorship<input type="url" name="proposalUrl" maxlength="2000" value="'+escape(content.proposalUrl||'')+'"></label><div class="editor-grid partner-grid">'+(sponsors||'<p class="muted">Belum ada logo mitra.</p>')+'</div>'+
     '<fieldset><legend>Tambah mitra</legend><div class="editor-grid"><label>Kategori<select name="sponsorKategori">'+categoryOptions('sponsor')+'</select></label><label>Nama mitra<input name="sponsorName" maxlength="100"></label></div><label>Logo <span class="muted">PNG, JPEG or WebP · maksimal 2 MB</span><input type="file" name="sponsorLogo" accept="image/png,image/jpeg,image/webp"></label></fieldset></section>'+
     '<div class="publish-bar"><button>Terbitkan perubahan</button></div></form>'+
     '<section class="workspace-card" id="verification-email"><h2>Email verifikasi</h2><p class="muted">Tautan ini hanya dikirim kepada ketua tim.</p>'+

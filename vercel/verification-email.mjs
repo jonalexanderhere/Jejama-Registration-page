@@ -1,3 +1,4 @@
+import {defaultGuidebookUrl} from './event-defaults.mjs';
 import nodemailer from 'nodemailer';
 import {verificationMessage} from './verification-template.mjs';
 
@@ -15,7 +16,9 @@ export async function notifyCaptain(db,id) {
   if (!user || !password || !twibbon || !group) throw new Error('Email configuration missing');
 
   const [captain] = JSON.parse(row.participants);
-  const message = verificationMessage({captain:captain.name,team:row.team,twibbon,group});
+  const settings = await db.prepare('SELECT content FROM site_content WHERE id = ?').bind(1).first();
+  const guidebook = JSON.parse(settings?.content || '{}').guidebookUrl || defaultGuidebookUrl;
+  const message = verificationMessage({captain:captain.name,team:row.team,twibbon,group,guidebook});
   const claim = await db.prepare("UPDATE team_registrations SET verification_email_id = 'sending' WHERE id = ? AND status = 'verified' AND verification_email_id IS NULL").bind(id).run();
   if (!claim.meta.changes) throw new Error('Email already processing');
   const smtp = nodemailer.createTransport({

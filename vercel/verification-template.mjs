@@ -1,3 +1,4 @@
+import {defaultGuidebookUrl} from './event-defaults.mjs';
 const escapeHtml = value => String(value).replace(/[&<>"']/g, char => ({
   '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;',
 })[char]);
@@ -8,11 +9,11 @@ function button(label, link, background, color) {
   return '<a href="'+escapeHtml(url.href)+'" style="display:inline-block;background:'+background+';color:'+color+';padding:13px 20px;border-radius:8px;font-weight:bold;text-decoration:none">'+label+'</a>';
 }
 
-export function verificationMessage({captain,team,twibbon,group}) {
+export function verificationMessage({captain,team,twibbon,group,guidebook=defaultGuidebookUrl}) {
   const text = [
     'JEJAMA CTF | Pendaftaran terverifikasi', '', 'Halo '+captain+',',
     'Pembayaran telah diverifikasi dan tim '+team+' resmi terdaftar sebagai peserta Jejama CTF.', '',
-    'Gunakan Twibbon: '+twibbon, 'Gabung Grup Peserta: '+group, '',
+    'Buku panduan: '+guidebook, 'Gunakan Twibbon: '+twibbon, 'Gabung Grup Peserta: '+group, '',
     'Sampai bertemu di Jejama CTF,', 'Panitia Jejama CTF',
   ].join('\n');
   const html = `<!doctype html><html lang="id"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"></head>
@@ -27,6 +28,8 @@ export function verificationMessage({captain,team,twibbon,group}) {
 <p style="margin:0 0 18px">Pembayaran Anda telah diverifikasi dan tim Anda resmi terdaftar sebagai peserta Jejama CTF.</p>
 <p style="margin:0 0 24px;padding:14px 16px;background:#eef5fb;border-radius:8px;overflow-wrap:anywhere"><span style="color:#506579">Tim</span><br><strong>${escapeHtml(team)}</strong></p>
 <h2 style="margin:0 0 14px;font-size:20px">Langkah selanjutnya</h2>
+<p>Pelajari panduan kompetisi, gunakan Twibbon, lalu bergabung ke grup untuk mendapatkan informasi dari panitia.</p>
+<p style="margin:0 0 10px">${button('Baca Buku Panduan',guidebook,'#123d68','#ffffff')}</p>
 <p style="margin:0 0 10px">${button('Gunakan Twibbon',twibbon,'#ffd184','#102e4c')}</p>
 <p style="margin:0 0 24px">${button('Gabung Grup Peserta',group,'#123d68','#ffffff')}</p>
 <p style="margin:0">Sampai bertemu di Jejama CTF,<br><strong>Panitia Jejama CTF</strong></p>
