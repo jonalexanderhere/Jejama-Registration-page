@@ -27,7 +27,7 @@ form.addEventListener('submit', async (event) => {
   for (const kind of ['identity','social']) {
     const file = data.get(kind);
     if (!file?.size || file.size > maxProofSize || file.type !== 'application/pdf') {
-      feedback.textContent = 'Unggah PDF identitas ketua dan bukti media sosial, masing-masing maksimal 5 MB.';
+      feedback.textContent = 'Unggah PDF identitas seluruh anggota dan bukti media sosial, masing-masing maksimal 5 MB.';
       return;
     }
   }
