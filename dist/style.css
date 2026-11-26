@@ -249,3 +249,5 @@ body:has(#registration-dialog[open]){overflow:hidden}
 .timeline li[data-state=active]::before{background:#ffe0a1;box-shadow:0 0 0 5px #dba95144}
 .timeline li[data-state=completed]::before{background:#8ccbb1}
 @media(min-width:760px){.timeline li:nth-child(odd){padding-bottom:18.8rem}}
+
+.event-summary{grid-template-columns:repeat(2,minmax(0,1fr))}
